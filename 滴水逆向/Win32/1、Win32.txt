@@ -1,0 +1,843 @@
+win32 API ：即存放在C：\Windows\system32 下面所有的DLL
+
+非常重要的几个DLL：
+	
+	Kernel32.dll : 最核心的功能模块，比如管理内存、进程和线程相关的函数等、
+	User32.dll ：是windows用户界面相关应用程序接口，如创建窗口和发送信息等
+	GDI32.dll：全称Graphical Device Interface（图形设备接口),包含用于画图和显示文本的函数，比如要显示一个
+		程序窗口，就调用了其中的函数来画这个窗口
+
+Win32 宽字符和多字节字符
+
+(1) 包含头文件 #include <locale.h>										
+(2) setlocale(LC_ALL,""); //使用控制台默认的编码					
+
+	1.字符类型                          2.字符串指针
+	char      	      CHAR	          PSTR（LPSTR）指向多字节字符串
+
+	wchar_t	      WCHAR        PWSTR(LPWSTR) 指向宽字符串     例：wchar_t x1[] = L"中国"  L：查询UNICODE
+	
+	  宏  TCHA       宏   PTSTR（LPTSTR) 例：TCHAR cht[] = TEXT("中国"); TEXT：根据环境会自己转换
+    
+C语言中的宽字符和多字符													
+							
+	char		wchar_t		//多字节字符类型   宽字符类型										
+	printf		wprintf		//打印到控制台函数										
+	strlen		wcslen		//获取长度										
+	strcpy		wcscpy		//字符串复制										
+	strcat		wcscat		//字符串拼接										
+	strcmp		wcscmp		//字符串比较										
+	strstr		wcsstr		//字符串查找	
+
+打印
+	Win32程序不像普通的控制台程序，他的打印信息不会出现dos窗口，可以使用OutputDebugStringF函数出现在
+	输入窗口。对OtputDebugStringF做些改动，就可以使打印信息再debug版中调用，而不是出现再正式的release版本中
+
+头文件中：
+void __cdecl OutputDebugStringF(const char *format, ...);
+#ifdef _DEBUG  
+#define DbgPrintf   OutputDebugStringF  
+#else  
+#define DbgPrintf  
+#endif
+
+源文件中：
+void __cdecl OutputDebugStringF(const char *format, ...)
+{
+va_list vlArgs;
+char    *strBuffer = (char*)GlobalAlloc(GPTR, 4096);
+
+    va_start(vlArgs, format);
+_vsnprintf(strBuffer, 4096 - 1, format, vlArgs);
+va_end(vlArgs);
+strcat(strBuffer, "\n");
+OutputDebugStringA(strBuffer);
+GlobalFree(strBuffer);
+return;
+}		
+
+错误处理
+
+DWORD GetLastError（VOID）
+GetLastError返回的值通过再API函数中调用SetLastError或SetLastErrorEx设置。函数并无必要设置上一次错误信息，
+所以即使一次GetLastError调用返回值为零，也不能担保函数已成功执行。只有在函数调用返回一个错误结果时，这个
+函数指出的错误结构才是有效的。通常只有在函数返回一个错误结果，而且已知函数会设置GetLastError变量的前提下，
+才应该访问GetLastError；这时能保证获得有效的结果
+
+
+时间、消息、消息处理函数
+
+typedef struct tagMSG {			
+  HWND   hwnd; 			
+  UINT   message; 			
+  WPARAM wParam; 			
+  LPARAM lParam; 			
+  DWORD  time; 			
+  POINT  pt; 			
+} MSG, *PMSG; 			
+
+1、hwnd
+表示消息所属的窗口
+
+一个消息一般都是与某个窗口相关联的
+Windows中 HWND类型的变量通常用来表示窗口
+
+2、message
+
+在Windows中，消息是一个数值来表示的
+但是由于数值不便于记忆，所以Windows将消息对应的数值定义为 WM_XXX宏（WM == Windows Message）
+鼠标左键按下 WM_LBUTTONDOWN   键盘按下 WM_KEYDOWN
+
+3、wParam 和 lParam
+
+32位消息的特定附加信息，具体表示什么处决于message
+
+4、time
+
+消息创建时的时间
+
+5、pt
+消息创建时的鼠标位置
+
+
+一个完整的消息流程
+
+	1、系统/用户触发的某个动作			//事件
+
+	2、系统将这些信息存储到MSG结构体 		//消息
+
+	3、系统将该信息存储到相关应用程序的消息队列中	//消息队列
+
+	4、  MSG Msg；							
+	while(GetMessage(&Msg,NULL,0,0))        		//从队列中获取消息	
+	{		
+		TranslateMessage(&Msg);                  		//翻译消息  	
+		DispatchMessage(&Msg);			//分派消息    	
+	}
+
+	5、DispatchMessage将加工过的信息传递 给操作系统
+
+	6、系统调用窗口过程函数
+
+	7、LRESULT CALLBACK WindowProc(  		//窗口过程函数	
+		IN  HWND hwnd,  			//窗口句柄				
+		IN  UINT uMsg,  			//消息类型			
+		IN  WPARAM wParam,  						
+		IN  LPARAM lParam  						
+	  );  						
+--------------------------------------------------------------------------------------------------------------------------------							
+
+1、Win32应用程序入口识别
+
+[<&KERNEL32.GetModuleHandleA ]其实就是得到WinMain中的第一个参数句柄，也就是WinMain中由stdcall被压栈的第四
+参数，压栈实例句柄的下一个call，应该就是我们的WinMain函数入口，我们在跟进去看看就能确定是不是我们真正WinMan函数入口
+
+2、ESP寻址的特点
+
+进入WinMain函数，开展操作并不是常见的EBP寻址(push ebp, move ebp, esp) ，而是sub esp，44这种
+debug大多采用EBP+偏移开栈，release大多采用ESP - 偏移开栈
+ESP开栈，每次push压栈，pop出栈都会引起esp的变化，需要重点注意
+
+3、窗口回调函数的定位
+
+    窗口回调函数在WinMain函数中出现就是在函数开头构造wndclass类中，wndclass中的第二个参数就是窗口回调函
+数的指针	
+    而wndclass类可以通过RegisterClass函数得到，RegisterClass的唯一参数就是wndclass类的指针
+    得到wndclass类的指针，由此可得回调函数的地址
+
+4、具体时间的处理的定位
+
+    打个条件断点，因为接受所有的事件，不做条件断点，会涌来很多相应
+    再去查看Windows定义的时间编号
+--------------------------------------------------------------------------------------------------------------------------------
+
+按钮总结：
+	
+  1.按钮是一种特殊的窗口，并不需要提供单独的窗口回调函数
+  2.当按钮有事件产生时，会给父窗口消息处理程序发送一个WM_COMMAND消息
+
+                  单机按钮                                        转换WM_COMMAND      
+  按钮————————> 系统提供WinProc  ———————————> 父窗口的WinProc
+
+-------------------------------------------------------------------------------------------------------------------------------
+
+资源文件、创建对话框
+1、创建一个空的Win32应用程序
+2、在vs种新增资源
+创建成功后会新增两个文件：xxx.rc  和 resource.h
+3、打开新创建的xxx.rc 文件，新增一个对话框，并在对话框新增2个按钮
+4、打开resource.h文件，会发现编译器自动给生成了宏
+5、通过DialogBox创建对话框
+INT_PTR DialogBox(					
+  HINSTANCE hInstance,  // handle to module					
+  LPCTSTR lpTemplate,   // dialog box template					
+  HWND hWndParent,      // handle to owner window					
+  DLGPROC lpDialogFunc  // dialog box procedure					
+);					
+6、第一Dialog消息处理函数  处理过返回TRUE ， 未处理返回FALSE
+
+
+资源表
+
+typedef struct _IMAGE_RESOURCE_DIRECTORY {								
+    DWORD   Characteristics;				//资源属性  保留 0		
+    DWORD   TimeDateStamp;				//资源创建的时间		
+    WORD    MajorVersion;				//资源版本号 未使用 0		
+    WORD    MinorVersion;				//资源版本号 未使用 0		
+    WORD    NumberOfNamedEntries;			//以名称命名的资源数量		
+    WORD    NumberOfIdEntries;			//以ID命名的资源数量		
+//  IMAGE_RESOURCE_DIRECTORY_ENTRY DirectoryEntries[];								
+} IMAGE_RESOURCE_DIRECTORY, *PIMAGE_RESOURCE_DIRECTORY;								
+
+数据目录项
+
+typedef struct _IMAGE_RESOURCE_DIRECTORY_ENTRY {									
+    union {					//目录项的名称、或者ID			
+        struct {									
+            DWORD NameOffset:31;										
+            DWORD NameIsString:1;	//用于判断存储值的 低31 是名称或者ID								
+        };									
+        DWORD   Name;									
+        WORD    Id;									
+    };									
+    union {									
+        DWORD   OffsetToData;			//目录项指针			
+        struct {									
+            DWORD   OffsetToDirectory:31;									
+            DWORD   DataIsDirectory:1;									
+        };									
+    };									
+} IMAGE_RESOURCE_DIRECTORY_ENTRY, *PIMAGE_RESOURCE_DIRECTORY_ENTRY;									
+
+数据项
+
+typedef struct _IMAGE_DATA_DIRECTORY {					
+    DWORD   VirtualAddress;					
+    DWORD   Size;					
+} IMAGE_DATA_DIRECTORY, *PIMAGE_DATA_DIRECTORY;					
+
+
+IMAGE_RESOURCE_DIRECTOry_ENTRY
+
+Name的含义：资源类型         第一层    	   第二层		第三层：
+	     	             光标：1	   资源编号	代码页
+		             位图：2
+		             图标：3
+		             菜单：4
+		             对话框：5  
+		             共16种预定义类型....
+
+特别说明：
+1、当最高位是1时，低31位时一个UNICODE指针，指向一个结构体：
+typedef struct _IMAGE_RESOURCE_DIR_STRING_U {						
+    WORD    Length;		//长度				
+    WCHAR   NameString[ 1 ];	//字符串首地址				
+} IMAGE_RESOURCE_DIR_STRING_U, *PIMAGE_RESOURCE_DIR_STRING_U;
+
+2、当最高位是0时，表示字段的值作为 ID使用
+3、如何判断第一位的值？
+pResourceEntry[i].Name & 0x80000000 == 0x80000000	
+pResourceEntry[i].NameIsString == 1					
+
+OffsetToData的含义
+
+最高位如果为1，低31位 + 资源地址 == 下一层目录节点的起始位置
+第一层、第二层全为1
+最高位如果为0，指向 IMAGE_RESOURCE_DATA_ENTRY
+第三次为0
+
+-----------------------------------------------------------------------------------------------------------------------------
+
+Windows通用控件，代码包含在Comctr132.dll
+
+使用前：
+#include<commctrl.h>
+#pragma comment( lib, "comctl32.lib" )
+
+特别说明：
+
+通用控件在使用前，需要通过INITCOMMONCONTROLSEX进行初始化
+是要在您的程序中的任意地方引用了该函数，会使得 WINDOWS的程序加载器PE Loader加载该库
+
+INITCOMMONCONTROLSEX  icex；
+icex.dwSize = sizeof(INITCOMMONCONTROLSEX);
+icex.dwICC = ICC_WIN95_CLASSES;
+InitCommonControlsEx(&icex);
+
+
+WM_NOTIFY的使用
+
+该消息类型与WM_COMMAND类型相似，都是由子窗口向父窗口发送的消息
+WM_NOTIFY可以包含比WM_COMMAND更丰富的信息
+Windows通用组件中有很多消息，都是通过WM_NOTIFY来描述的
+
+
+WM_NOTIFY消息中的参数如下：							
+							
+	wParam:控件ID						
+							
+	lParam:指向一个结构						
+							
+	typedef struct tagNMHDR { 						
+	        HWND hwndFrom; //发送通知消息的控制窗口句柄						
+	        UINT idFrom;   //发送通知消息的控制ID值						
+	        UINT code;     //通知码，如LVM_SELCHANGED						
+	    } NMHDR; 						
+							
+							
+这个结构体能满足一般的要求，但能描述的信息还是有限的							
+							
+解决方案：对每种不同用途的通知消息都定义另一种结构来表示							
+							
+	typedef struct tagNMLVCACHEHINT {						
+	    NMHDR   hdr;		//本质 就是继承				
+	    int     iFrom;						
+	    int     iTo;						
+	} NMLVCACHEHINT, *PNMLVCACHEHINT;						
+							
+	typedef struct tagLVDISPINFO {						
+	    NMHDR hdr;						
+	    LVITEM item;						
+	} NMLVDISPINFO, FAR *LPNMLVDISPINFO;						
+							
+	typedef struct _NMLVFINDITEM {						
+	    NMHDR hdr;						
+	    int iStart;						
+	    LVFINDINFO lvfi;						
+	} NMLVFINDITEM, *PNMLVFINDITEM;						
+
+---------------------------------------------------------------------------------------------------------------------------------
+
+创建线程
+
+HANDLE CreateThread(				
+  LPSECURITY_ATTRIBUTES lpThreadAttributes, // 安全属性 通常为NULL				
+  SIZE_T dwStackSize,                      	          // 参数用于设定线程可以将多少地址空间用于它自己的堆栈				
+				          // 每个线程拥有它自己的堆栈
+  LPTHREAD_START_ROUTINE lpStartAddress,  // 参数用于指明想要新线程执行的线程函数的地址				
+  LPVOID lpParameter,                       	          // 线程函数的参数				
+				          // 在线程启动执行时将该参数传递给线程函数
+				          // 既可以是数字，也可以是指向包含其他信息的一个数据结构的指针
+  DWORD dwCreationFlags,                   	          // 0 创建完毕立即调度  CREATE_SUSPENDED创建后挂起				
+  LPDWORD lpThreadId                        	          // 线程ID 				
+);				          // 返回值：线程句柄
+
+创建线程代码：
+  
+  //创建一个新的线程
+HANDLE hThread = :: CreateThread( NULL, 0, ThreadProc, NULL, 0, NULL);   // : :  表示全局
+
+ //如果不在其他的地方引用它 关闭句柄
+ :: CloseHandle(hThread);			        
+
+线程函数：
+ DWORD WINAPI ThreadProc ( 
+			LPVOID lpParameter  // thread data  线程数据
+			)
+向线程函数传递变量的两种方式：
+1.全局变量
+2.线程参数		
+
+文本框赋值：
+SetWindowText( 句柄，数据缓冲区）；
+文本框取值：
+GetWindowText( 句柄，数据缓冲区， 长度);
+数字转字符：
+sprintf( 数据缓冲区， "%d", 数字）
+字符串转数字：
+sscanf（数据缓存区r，"%d", OUT &dwTimer)
+获取子窗口：
+GetDlgItem( hDlg, 窗口ID）；
+
+--------------------------------------------------------------------------------------------------------------------------------
+
+1、线程控制
+  
+  挂起线程：
+   : :SuspendThread(hThread);
+
+  恢复线程：
+  : :ResumeThread(hThread);
+
+  终止线程:
+
+方式一：
+  : :ExitThread(DWORD dwExitCode);     
+        //参数中没有线程句柄，在线程函数中使用；
+        //参数dwExitCode为线程退出码，将作为线程处理函数的返回值，用来描述线程的非正常退出
+        //每一个线程都有自己的堆栈，该函数终止的线程会清理堆栈；
+        //该函数一旦调用，线程将不能再被操作，但该函数并不会释放堆中的内存，因此存在内存溢出的隐患；
+
+方式二：
+  线程函数返回 		
+     //线程函数执行完后会结束线程，因为是正常结束，可以自己写代码来释放堆中申请的内存；      
+
+方式三：
+  : :TerminateThread(hThread, 2);   //第二个参数为线程退出码 
+  : :WaitForSingleObject(hThread, INFINITE);	
+      //TerminateThread并不会清理堆栈，这样的好处是其它地方用堆栈中的变量时不会出问题；    
+
+判断线程是否结束		
+		
+BOOL GetExitCodeThread(		
+  HANDLE hThread,		
+  LPDWORD lpExitCode		
+);		
+		
+STILL_ACTIVE 正在运行		
+
+参数：
+hThread：要结束的线程句柄
+dwExitCode：指定线程的退出代码。可以通过GetExitCodeThread来查看一个线程的退出代码
+
+ExitThread和TreminateThread的区别:
+
+   都是用来结束线程的，ExitThread是同步，也就是ExitThread执行完毕后程序才能继续执行；
+   TreminateThread是异步调用，也就是单独起了一个线程来让目标线程结束；
+   TreminateThread调用后是不能保证立即结束线程，在后面写的线程 结束后 要执行的代码可能有问题；
+   解决方法就是用 WaitForSingleObject，该函数会阻塞线程直到TerminateThread的目标线程真正结束；
+
+线程挂起后恢复时并不会立即运行；
+因为windows并不是实时的操作系统，只有在调度程序给可调度状态的线程分配cpu时间时才会运行
+因此windows种无法实现在某个确定的时间点运行一个线程；
+
+2、线程contex结构
+每个线程在执行的时候，都会独自占用一个cpu
+当系统中的线程数量 > CPU的数量时，就会存在多个线程共用一个CPU的情况
+但CPU每次只能运行一个线程，Windows每隔20毫秒会进行线程的切换，
+那比如线程A执行到地址：0x2345678 eax:1 ecx:2 edx:3 ebx:4...还有eflag标志寄存器中的值等等。。。             
+此时，线程执行时间到了，被切换到了线程B。。。。
+当线程B的时间片也到了，再切换回线程A时，系统是如何知道该从哪个地址开始执行呢？被切换前用到的各种寄存器的值该如何恢复呢？
+
+获取线程CONTEXT结构：
+
+
+进程就是程序的4GB空间，线程就是EIP；
+当一个线程切换时，为了再次执行时能接着执行，会将寄存器的信息保存context结构中；
+ //挂起线程
+ SubpendThread（线程句柄）；
+ CONTEXT  context；
+
+ //设置要获取的类型
+context.ContextFlags = CONTEXT_CONTROL
+
+ //获取
+ BOOL ok = : :GetThreadContext(hThread, &context);
+
+ //设置
+ context.Eip = 0x401000;
+ SetThreadContext(hThread, &context);
+
+--------------------------------------------------------------------------------------------------------------------------
+
+线程安全
+
+1.线程不安全的原因
+一个进程的4GB空间中可能有多个线程；
+每一个线程都有自己的堆栈；
+堆栈中放参数、局部变量等；
+如果线程只使用参数和局部变量不会有线程安全问题；
+ 
+当多个线程访问同一资源例如放在全局变量区中的全局变量时可能会有线程安全问题；
+例如一个线程读另一个线程写或者两个线程都写同一个全局变量，最后得到的值可能并不是准确的；
+    线程A读全局变量x，此时x=10；
+    切换到线程B，B读到x=10；
+    B执行x+1并写出；此时x=11；
+    切换到线程A，A执行x+1并写出，此时由于之前A读到的是10，A从contex结构中得到x的值为10，而不是B修改后的11；x=10+1=11；
+    最后x=11，而不是预期的12；
+
+2.如何解决线程安全问题：
+
+就像火车上的厕所一样，一次只能有一个人进去；
+如果一个人进去，就锁上门，后面的人看到门锁了也就进不去了；
+等第一个人使用完，就打开门锁；
+
+临界区使用步骤：
+
+ //1.创建CRITICAL_SECTION：
+  CRITICAL_SECTIO  cs；
+
+ //2.在使用前进行初始化
+  InitializeCriticalSection(&cs);
+
+ //3.在函数中使用
+   DWORD WINAPI 线程A(PVOID pvParam) 			
+   {			
+      EnterCriticalSection(&cs);						
+      //对全局遍历X的操作						
+      LeaveCriticalSection(&cs);			
+      return(0);			
+    }			
+					
+DWORD WINAPI 线程B(PVOID pvParam) 			
+{			
+      EnterCriticalSection(&g_cs);					
+      //对全局遍历X的操作					
+      LeaveCriticalSection(&g_cs);			
+      return(0);			
+}			
+
+ //4.删除CRITICAL_SECTION
+  VOID DeleteCriticalSection(PCRITICAL_SECTION  pcs)
+
+
+typedef struct _RTL_CRITICAL_SECTION {		
+    PRTL_CRITICAL_SECTION_DEBUG DebugInfo;		
+    LONG LockCount;		
+    LONG RecursionCount;		
+    HANDLE OwningThread;       		
+    HANDLE LockSemaphore;		
+    DWORD SpinCount;		
+} RTL_CRITICAL_SECTION, *PRTL_CRITICAL_SECTION;		
+
+LockCout: 
+  它被初始化为数值 -1 
+  此数值等于或大于0时，表示次临界区被占用
+
+ 等待获得临界区的线程数：LockCout - （RecursionCout - 1）
+
+RecursionCout：
+ 此字段包含所有者线程已经获得该临界区的次数
+
+OwningThread：
+ 此字段包含当前占用此临界区的线程标识符
+ 此线程 ID 与 GetCurrentThreadId 所返回的Id相同
+
+-------------------------------------------------------------------------------------------------------------------------
+
+WaitForSingleObject ：
+
+DWORD WaitForSingleObject(					
+  HANDLE hHandle,        // handle to object					
+  DWORD dwMilliseconds   // time-out interval					
+);					
+ 
+功能说明：
+   等待函数可使线程自愿进入等待状态，直到一个特定的内核对象变为已通知状态为止。
+
+hHandle ->    内核对象句柄，可以是进程也可以是线程。
+
+dwMilliseconds  ->   等待时间，单位是毫秒 INFINITE（-1）一直等待
+   
+返回值：
+   WAIT_OBJECT_（0） 等待对象变为已通知
+   WAIT_TIMEOUT(0x102)  超时
+
+特别说明：
+  
+   1、内核对象中的每种对象都可以说是处于已通知或未通知的状态之中
+   2、这种状态的切换是由Microsoft为每个对创建的一套规则来决定的
+   3、当线程正在运行的时候，线程内核对象处于未通知状态
+   4、当线程终止运行的时候，他就变为已通知状态
+   5、在内核中就是个BOOL值，运行时FALSE，结束TRUE
+
+
+WaitForMultipleObjects:
+ 
+DWORD WaitForMultipleObjects(						
+  DWORD nCount,             // number of handles in array						
+  CONST HANDLE *lpHandles,  // object-handle array						
+  BOOL bWaitAll,            // wait option						
+  DWORD dwMilliseconds      // time-out interval						
+);						
+
+功能说明：
+  同时查看若干个内核对象的已通知状态
+
+nCount ->      要查看内核对象的数量
+ 
+lpHandles ->  内核对象数组
+  
+bWaitAll ->    等到类型 TRUE 等到所有变为已通知，FALSE 只要有一个变为已通知
+   
+dwMilliseconds -> 超时时间    INFINITE 一直等待
+   
+ 
+返回值：
+   bWaitAll为TRUE时， 返回WAIT_OBJECT_0(0）代码所有内核对象都变成已通知
+   bWaitAll为FALSE时，返回最先变成已通知的内核对象在数组中的索引
+   WAIT_TIMEOUT(0x102)  超时
+
+互斥体：
+  互斥： 
+      一个全局变量或资源，可能有多个线程同时访问时会出现线程安全问题；
+      可以用互斥机制来解决： 一个线程正在访问目标资源时其他线程都不能访问；
+      临界区就是实现互斥的一种方式；
+   
+ 互斥体也是用用来实现互斥的一种方式：
+   1.创建互斥体： API函数：
+  
+    HANDLE CreateMutex(
+    	LPSECURITY_ATTRIBUTES lpMutexAttributes,  // SD
+    	BOOL bInitialOwner,                       	// initial owner
+    	LPCTSTR lpName                            // object name
+      ) ;
+  
+     lpMutexAttributes  ->  三环程序一般传NULL，如果这个参数不为空一般就是内核对象
+     bInitialOwner  ->   此值为 TRUE 并且调用方创建了互斥体，
+      则调用线程将获得互斥对象的初始所有权。否则，调用线程不会获得互斥锁的所有权
+
+     lpName    ->互斥体名称；如果另一个进程想打开该互斥体，需要用到                  
+  
+   2.打开互斥体
+       HANDLE OpenMutex(
+ 	 DWORD dwDesiredAccess,  // access
+  	 BOOL bInheritHandle,    // inheritance option
+  	 LPCTSTR lpName          // object name
+         );
+
+        dwDesiredAccess  ->  权限；MUTEX_ALL_ACCESS、SYNCHRONIZE
+        bInheritHandle,    ->  返回的句柄是否可继承
+        lpName         ->  目标互斥体
+
+
+	//进程一：
+   	HANDLE g_hMutex = CreateMutex(NULL, FALSE, "XYZ")
+
+	//进程二：
+   	HANDLE g_hMutex = OpenMuTex(MUTEX_ALL_ACCESS, FALSE, "XYZ");  //打开现有的命名互斥对象。
+
+  	 WaitForSingleObject( g_hMutex, INFINITE );
+
+	//逻辑代码
+   	ReleaseMutex（g_hMutex);  //释放指定互斥对象的所有权。
+
+	//进程三：
+   	HANDLE g_hMutex = OpenMutex（MUTEX_ALL_ACCESS, FALSE， “XYZ");
+   	WaitForSingleObject(g_hMutex, INFINITE);
+
+	//逻辑代码
+  	 ReleaseMutex（g_hMutex);
+
+
+互斥体与临界区的区别：
+
+   1、临界区只能用于单个进程间的线程控制
+   2、互斥体可以设定等待超时，但临界区不能
+   3、线程意外终止时，Mutex可以避免无限等待。
+   4、Mutex效率没有临界区高
+
+-----------------------------------------------------------------------------------------------------------------------
+
+事件、线程同步
+
+1、内核对象
+   内核对象是由操作系统创建和维护的，在程序的高2g内存中创建
+   进程可以共享内核对象；
+   常见的内核对象：进程、线程、文件、文件映射、事件、互斥体等等
+
+ (1) 内核对象的创建
+  各种内核对象有各自的创建API函数：
+  内核对象是由操作系统创建的，三环程序只能用API函数告诉系统需要创建一个内核程序；
+例如：创建事件和互斥体
+
+         HANDLE  g_hEvent = CreateEvent(NULL, TRUE, FALSE, "XYZ")
+         HANDLE  g_hMutex = CreateMutex( NULL, FALSE, "XYZ")
+
+  Windows在创建完成内核对象后会返回该内核对象的句柄；
+  句柄实际上是指针的指针；
+  不直接返回内核对象地址的原因是为了安全，如果高2g的程序通过地址直接修改了内核对象，可能会导致系统崩溃；
+
+ (2) 获取内核对象
+    获取事件的API
+          
+           HANDLE  OpenEvent( 
+		DWORD  dwDesiredAccess, 	// access
+		BOOL	bInheritHandle,    	// inheritance option  
+		LPCTSTR   lpName	            	// object name   
+		); 
+       参数：
+      dwDesiredAccess ->  指定对 事件对象的请求访问权限
+      bInheritHandle     ->  指定是否返回的句柄是否继承，该参数必须设置为FALSE
+      lpName   ->  指向一个NULL结束的字符串，即将要打开的事件对象的名字。名称区分大小写	            
+
+    实例：获取事件和互斥体
+            HANDLE  g_hEvent = OpenEvent(EVENT_ALL_ACCESS,  FALSE,  "XYZ"）；
+            HANDLE  g_hMutex = OpenMutex( MUTEX_ALL_ACCESS, FALSE, "XYZ"); 	
+ 
+ (3)内核函数销毁
+    
+            BOOL  CloseHandle ( HANDLE  hobj);
+   只是告诉操作系统，这个内核对象不用了，实际上该内核对象是否销毁还要看操作系统；  
+   在创建完内核对象后，低2g会有一个结构体保存内核对象的信息；
+   结构体中有一个成员为计数器，每当有一个进程openXXX调用内核对象时，计数器加1，调用CloseHandle时计数器减1；
+   当计数器为0时表示没有进程使用内核对象了，操作系统将销毁该对象
+
+   1.当没有其他程序引用时，系统会销毁内核对象（使用数量），
+   2.内核对象的生命周期，可能比创建他的对象要长。（其他进程调用open方法得到了内核进程的句柄时）
+
+2、事件
+    事件是一种内核对象     
+
+   (1) 创建事件
+  
+           HANDLE  CreateEvent(
+ 	   LPSECURITY_ATTRIBUTES    lpEvebtAttributes,  // 安全属性 NULL时为系统默认
+ 	   BOOL  bManualReset,	// TRUE 通过调用ResetEvent将事件对象标记为未通知 
+	   BOOL  bInitialState,	// TRUE 已通知状态  FALSE未通知状态
+	   LPCTSTR  lpName    	// 对象名称 以NULL结尾的字符串      
+
+    bManualReset -> 如果为FALSE，只要有线程wait到了该事件，立马会将该事件的状态改回去变成未通知状态，为TRUE只能
+                                 wait完后自己写代码来修改为未通知状态
+    bInitialState   -> 表示事件创建时是否为已通知状态，如果为TRUE有线程wait该事件时 在创建时立马就wait到了
+
+   (2)事件控制
+          BOOL   SetEvent( HANDLE  hEvent）； // 将对象设置为已通知
+   (3)关闭事件句柄
+          BOOL   CloseHandle（HANDLE  hobj）；
+    
+3、线程同步
+ 
+  如果想多线程程序，需要解决两个问题：互斥和同步
+  互斥是为了 解决多个线程访问同一资源的线程安全问题；
+  同步是为了让多个线程 按自己 需要的顺序来执行
+     例如：让线程1和线程2交替执行，而不是让线程1执行多次在执行线程2 
+
+   线程同步的应用场景：
+      例如线程a将文本读入内存；线程1分析文本中子数，线程2分析文本中的标点符号数； 	
+      此时需要线程a执行完后线程1、2才能执行
+                   --------------------------------------------------------------------
+   1）用临界区和互斥体实现同步
+例如：
+    有一个生产者线程和一个消费者线程；
+    需求是生产者线程将全局变量的值设为1，然后消费者线程将读到全局变量的值将其设为0；
+    用临界区和互斥体的作用差不多，都用来实现对全局变量的互斥访问；
+    但临界区和互斥体并不能保证生产者和消费者线程的访问顺序；
+    只能定义一个全局变量a用做标记，每次线程执行时先判断该标记的值来决定是否执行线程的功能；
+    这种办法效率低下，例如生产者线程被分配了cpu资源，此时判断标记得知全局变量的值不为0，表示没必要修改；但
+    分配 到的cpu资源不会释放；   
+                  ----------------------------------------------------------------------
+2）用事件实现线程同步
+事件可以做到线程互斥，也能做到简单的线程同步；
+ 
+思路：
+    创建两个事件：set和clear；
+    两个事件的bManualReset都设为FALSE，表示不需要手动修改事件为未通知状态；
+    set的bInitialState设为，TRUE表示当事件创建时就是已通知状态；
+    生产者线程等待set事件；因为set线程创建时就已通知状态，开始就能将全局变量设为1；
+    当生产者线程执行完后，将clear线程设为已通知状态；因为bManualReset位FALSE，set事件自动变为未通知状态，生产者线程阻塞；
+    消费者线程等待clear事件；
+    clear事件的bInitialState为FALSE，创建时为未通知状态，因此消费者线程将等待；
+    直到生产者线程将clear事件变成了已通知后，消费者线程继续执行；
+    消费者线程执行完后set事件自动变成未通知状态，消费者线程阻塞；
+    在消费者线程执行完前，调用函数将set事件变成已通知状态，因此生产者线程又能继续执行；
+    如此实现了两个线程的交替执行；
+    这样实现的同步效率较高，当线程无法执行时会进入等待状态cpu不会给它分配资源；
+ 
+-----------------------------------------------------------------------------------------------------------------------------------
+
+ 信号量
+ 
+    多线程程序需要注意两件事：互斥和同步
+    互斥是多个线程访问同一个资源时，要保证 同一时刻 只能有一个线程访问该资源；
+    互斥体常用的实现方式有：临界区和互斥体；
+        临界区无法跨进程，互斥体可以
+        互斥体是内核对象，内核对象需要对0环进行操作，效率不如临界区；
+    同步是为了线程按顺序执行，例如两个线程，希望某一个线程在执行一定要保证另一个线程已经做了相应的操作；
+    可以用事件来实现简单的同步；
+    如果复杂的同步有时事件无法实现
+    信号量也可以用来实现同步
+
+1.关于信号量
+    信号量也是一个内核对象
+ 
+  (1)创建
+     HANDLE  CreateSemaphore(
+  	LPSECURITY_ATTRIBUTES  lpSemaphoreAttributes,
+	LONG	lInitialCount,
+	LONG	lMaximumCount,
+	LPCTSTR	lpName
+	);
+第一个参数表示安全控制，一般直接传入NULL,
+第二个参数表示初始资源数量，0时不发送信号
+第三个参数表示最大并发数量。lInitialCount <= lMaximumCount
+第四个参数表示信号量的名称，传入NULL表示匿名信号量
+
+  (2)打开
+       HANDLE  OpenSemaphore(
+	DWORD	dwDesiredAccess,
+	BOOL	bInheritHandle,
+	LPCTSTR	lpName
+	);
+第一个参数表示访问权限，对一般传入SEMAPHORE_ALL_ACCESS  详细解释可以查看MSDN文档
+第二个参数表示信号量句柄继承性，一般传入FALSE即可。
+第三个参数表示名称，不同进程中的个线程可以通过名称来确保它们访问同一个信号量
+
+  (3)递增信号量的当前资源计数
+        BOLL  ReleaseSemaphore(
+	HANDLE	hSemaphore,
+	LONG	lReleaseCount,
+	LPLONG	lpPreviousCount
+	);
+第一个参数是信号量的句柄
+第二个参数表示增加个数，必须大于0且不超过最大资源数量
+第三个参数返回当前资源数量的原始值，设为NULL、表示不需要传出
+注：没有一个函数可以用来查询信标的当前资源数量的值
+	
+  (4)关闭
+        CloseHandle（）
+
+2.使用信号量
+     目标：
+   一个窗口程序，点击按钮go后开始文本框1中的数字开始累加；
+    当1累加到1000后，2、3、4中的两个开始累加直到100；
+    当其中有一个到100后剩下的文本框开始累加直到100；
+
+ 思路：
+    用信号量来实现线程的同步；
+    在按钮go的点击事件中创建一个线程a；
+    线程a中创建一个信号量，lInitialCount的值设为0，表示最开始不发送信号；
+    在线程a中创建3个子线程1、2、3分别实现文本框2、3、4的累加；
+    每个子线程都调用wait函数等待信号；
+    线程a中实现文本框1的累加，然后调用ReleaseSemaphore发送2个信号量；此时有2个等待信号量的子线程可继续运行；
+    当其中一个运行的子线程结束后，调用ReleaseSemaphore发送1个信号量；最后一个等待的子线程可继续运行；
+
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

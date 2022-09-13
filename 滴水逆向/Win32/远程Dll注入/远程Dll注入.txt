@@ -1,0 +1,192 @@
+DLL远程注入
+
+   注入原理：
+	使用Windows远程线程机制，在本地进程中通过CreateRemoteThread 函数在其他进程中开启并运行一个线程、
+
+      CreateRemosteThread 函数原型如下：
+
+	HANDLE WINAPI CreateRemoteThread (
+	HANDLE                  hProcess,			// 远程进程句柄  *
+	LPSECURITY_ATTRIBUTES  	lpThreadAttributes,	// 线程的安全属性
+	SIZE_T                 	 dwStackSize,		// 线程栈的大小
+	LPTHREAD_START_ROUTINE	lpStartAddress,        // 线程入口函数的起始地址   *
+	LPVOID                  lpParameter, 		// 传递给线程函数的参数       *
+	DWORD                 dwCreationFlags,		// 线程是否立即启动
+	LPDWORD              lpThreadId		// 用于保存内核分配给线程的ID
+	)；
+	
+      主要关注三个参数：hProcess、lpStartAddress 和 lpParameter。	
+	hProcess：要执行线程的目标进程句柄；
+	lpStartAddress ：线程函数的起始地址，且该函数必须位置目标进程中；
+	lpParameter：要传递给线程函数的参数
+
+      为了是远程进程加载DLL，把LoadLibrary 函数作为CreateRemoteThread 的线程函数，要加载的DLl路径作为线程
+      函数的参数即可。
+
+	然远程执行LoadLibrary函数加载DLL文件，需要解决两个问题：	
+	1.获得远程进程中LoadLibrary函数的地址：Kernel32.dll是系统基本库，且Windows系统中，所有进程加载
+	kernel32.dll模块基址是固定且一致的，所以只需要获取本地进程中 LoadLibray 地址
+
+	2.向远程进程传递需要加载DLL的路径: 通过Windwos  API 函数把路径写入远程程序中，使用以下 API：
+	OpenProcess、VirtualAllocEx、WriteProcessMemory、VirtualFreeEx
+
+
+   注入过程
+
+	1.获取目标进程句柄
+	使用OpenProcess函数打开远程进程的句柄、访问权限dwDesiredAccess 需要设置为 PROCESS_ALL_ACCESS
+	
+	HANDLE	WINAPI	OpenProcess（
+		DWORD	 dwDesiredAccess,		//指定所得句柄具有的访问权限
+		BOOL	 bInheritHandle，		//是否可被继承
+		DWORD	 dwProcessId		//指定要打开的进程ID
+	);
+
+	hProcess = OpenProcess(PROCESS_ALL_ACCESS,  FALSE,  dwPID);
+
+
+	2.在目标进程分配内存空间
+	使用VirtualAllocEX在目标进程中分配足够的内存空间，用于保存要加载DLL的路径
+	
+	LPVOID	WINAPI VirtualAllocEx（
+		HANDLE	 hProcess,	//目标进程句柄
+		LPVOID	 lpAddress，	//期望的起始地址，通常置为NULL
+		SIZE_T	 dwSize，		//需要分配的内存大小
+		DWORD	 flAllocationType,	//分配内存空间的类型，取MEM_COMMIT
+		DWORD	 flProtect		//内存访问权限，指定为可读可写：PAGE_READWRITE
+		);
+
+	pRemoteBuf = VirtualAllocEX( hProcess, NULL, dwBufSize, MEM_COMMIT, PAGE_READWRITE);
+
+
+	3.写入DLL路径至目标进程
+	用WirteProcessMemory 函数把需要加载的DLL路径写入到远程进程分配的内存空间
+
+	BOOL   WINAPI   WriteProcessMemory(
+		HANDLE	hProcess,		//目标进程句柄
+		LPVOID	lpBaseAddress，	//目标进程内存空间首地址
+		LPCVOID	lpBuffer，		//需写入数据的内存空间地址
+		SIZE_T	nSize，		//需写入数据字节数
+		SIZE_T	*lpNumberOfBytesWritten，	//实际写入的字节数，设置为NULL
+		);
+	
+	WRiteProcessMemory（hProcess， pRemoteBuf，（LPVOID)szDllPath, dwBufSize, NULL);
+
+
+	4.获取LoadLibraryW 地址
+	Windows系统中，LoadLibraryW 函数位于kernel32.dll中，并且系统核心DLL 会加载到固定地址，所以系统中
+	所有进程的 LoadLibraryW 函数地址是相同的，用 GetProcAddress 函数获取本地进程 LoadLibraryW 地址即可
+
+	WINAPI GetProcAddress (
+	MODULE 	hModule,	  	// 模块句柄
+	LPCSTR 	lpProcName	// 函数名
+	);
+	      	
+	hMod = GetModuleHandle(L"kernel32.dll");
+	pThreadProc = (LPTHREAD_START_ROUTINE)GetProcAddress(hMod, "LoadLibraryW");
+
+
+	5.在目标进程中运行远程线程
+	使用CreatteRemoteThread 函数是目标进程调用 LoadLibraryW 函数加载 DLL
+	
+	hThread = CreateRemoteThread(hProcess, NULL, 0, pThreadProc, pRemoteBuf, 0, NULL);
+
+-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+步骤： 	1、利用OpenProcess() 获取进程的句柄，
+
+	2、计算dll名称长度 strlen() 获取的长度需要加1 ，该函数遇到\0结束，所以返回大小不包括 \0 
+
+	3、使用VirtualAllocEx 在目标进程空间分配内存
+	   参数：（目标句柄，一般用NULL、分配大小、分配内存空间类型 、内存访问权限）PAGE_READWRITE该宏为可读可写
+
+	4、使用WriteProcessMemory将数据写入 目标进程分配的内存区域
+	    参数：（目标句柄，目标进程内存空间首地址，需要写入的数据  的地址，需要写入的字节数，实际写入的字节数(NULL))
+
+	5、使用GetModuleHandle 获取Kernel32.dll的模块地址，参数即 dll名  需要用到该dll中的LoadLibrary 
+
+	6、使用GetProcAddress 获取 LoadLibrary 地址 系统DLL的地址都是固定的， 即 该地址跟目标程序中 LoadLibrary 地址相同
+	    参数（dll模块地址，"函数名称“）
+	
+	7、使用CreateRemoteThread 在目标进程中创建线程 
+	    三个重要的参数:  第一个：目标进程句柄、 第四个：线程入口函数起始地址、 第五个：传递给线程函数的参数
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,155 @@
+1、QMainWindow 
+        1.1 菜单栏 最多有一个
+	1.1.1 QMenuBar* bar = MenuBar();  // 创建菜单
+	1.1.2 SetMenuBar(bar)   //将菜单栏写入窗口
+	1.1.3 bar->addMenu("菜单");  //创建菜单
+	1.1.4 fileMenu->addSeparator(); //创建分割线
+
+         1.2 工具栏  可以有多个
+	1.2.1 QToolBar* toolBar = new QToolBar(this)  //创建工具栏 
+	1.2.2 addToolBar(默认停靠区域,toolBar); //设置工具栏位置
+ 	1.2.3 toolBar->setAllowedAreas();  //设置移动
+	1.2.4 toolBar->setFloatable(); //设置浮动 
+	1.2.5 toolBar->setMovable(false);  //设置移动  (总开关)
+                1.2.6 toolBar->addAction(newfile);   //工具栏中设置内容
+	1.2.7 toolBar->addWidget(btn);  //工具栏添加控件
+       
+          1.3 状态栏 只能有一个
+	1.3.1  QStatusBar();      创建 状态栏 
+	1.3.2  setStatusBar();    //设置到窗口中
+	1.3.3  QLabel("提示信息",this); //创建 标签控件
+	         addWidget(labs);   //放入 状态栏
+                         addPermanentWidget(labs2);//设置右侧提示
+	1.3.4  QDockWidget();   //铆接部件 （浮动窗口） 可以有多个
+	         addDockWidget();
+	         dockWidget->setAllowedAreas();//设置后期停靠区域
+
+	1.3.5 QTextEdit* textEdit= new QTextEdit(this);
+  	         setCentralWidget(textEdit);//设置中心部件
+
+
+2、资源文件 
+           2.1 将图片文件 拷贝到项目位置下
+           2.2 右键 项目->添加新文件 ->Qt recourse File -> 给资源文件起名
+           2.3 res 生成 res.qrc
+           2.4 open int editor 编辑资源
+           2.5 添加前缀 添加文件
+           2.6 使用 ": + 前缀名 + 文件名 "	
+
+3、对话框
+           3.1 分类：
+	3.1.1 模态对话框   不可以对其他窗口操作
+	   3.1.1.1 QDialog dlg(this);
+	   3.1.1.2 dlg.exec();
+	3.1.2 非模态对话框   可以对其他窗口进行操作
+	   3.1.2.1 为了防止一闪而过 创建在堆区
+	   3.1.2.2 QDialog* dlg2 = new QDialog(this);
+	   3.1.2.3  dlg2->show()
+	   3.1.2.4  dlg2->setAttribute(Qt::WA_DeleteOnClose); 55号//属性 
+
+           3.2 标准对话框： 消息对话框
+	3.2.1 QMessageBox 静态成员函数  创建对话框
+	3.2.2 错误、消息、提问、警告
+	3.2.3 参数1 父亲  参数2 标题  参数3 显示内容 参数4 按键类型  参数5 默认关联回车按键 
+	3.2.4 返回值 也是StandardButton类型， 利用返回值判断用户输入
+
+           3.3 其他对话框
+	3.3.1 颜色对话框  QColorDiaLog :: getColor 
+	3.3.2 文件对话框  QFileDialog :: getOpenFileName( 父亲，标题，默认路径， 过滤文件）
+	3.3.3 字体对话框  QFontDialog :: getFont
+
+4、 界面布局
+           4.1 实现登录窗口
+           4.2 利用布局方式 给窗口进行美化
+           4.3  选取 widget 进行布局， 水平布局、垂直布局、栅格布局
+           4.4 给用户名、密码、登录、退出按钮进行布局
+           4.5 默认窗口和控件之间 有 9 间隙， 可以调整 layoutLeftMargin
+           4.6 利用弹簧进行布局
+
+5、控件
+           5.1按钮组
+	 5.1.1 QPushButton 常用按钮
+	 5.1.2 QToolButton 工具按钮 用于显示图片 如图想要显示文字，
+	         修改风格：toolButtonStyle,  凸起风格 autoRalse
+	 5.1.3 radioButton 单击选项，设置默认  ui->rBtnMan -> setChecked(true)
+	 5.1.4 checkbox 多选按钮， 监听器 ， 2 选中、 1 半选 、0 未选中、
+
+           5.2 QListWidget 列表容器
+	 5.2.1 QListWidgetItm * item  一行内容
+	 5.2.2 ui->listWidget->addItem (item)
+	 5.2.3 设置剧中方式 item->setTextAlignament(Qt::AlignHCenter）
+	 5.2.3 可以利用addItems 一次性添加整个诗内容
+
+           5.3 QTreeWidget 树控件
+	 5.3.1 设置头
+	       5.3.1.1 ui->ui->treeWidget->setHeaderLabels(QStringList()<<"");
+	 5.3.2 创建跟
+	       5.3.2.1  QTreeWidgetItem* liItem = new QTreeWidgetItem(QStringList()<<"");
+	 5.3.3 添加跟   到树控件上
+	       5.3.3.1  ui->treeWidget->addTopLevelItem(liItem);
+	 5.3.4 添加子节点
+	       5.3.1.1  liItem->addChild(l1);
+
+           5.4 QTableWidget 表格控件 	  		  
+	 5.4.1 设置列数
+	       	ui->tableWidget->setColumnCount(3);
+	 5.4.2 设置水平头
+	                ui->tableWidget->setHorizontalHeaderLabels(QStringList()<<"姓名"<<"性别"<<"年龄");
+	 5.4.3 设置行数  
+		ui->tableWidget->setRowCount(5);
+	 5.4.4 设置正文
+		ui->tableWidget->setItem(0,0,new QTableWidgetItem("赵云"));
+
+           5.5 其他控件介绍
+	 5.5.1 stackedWidget  栈控件
+		ui->stackedWidget->setCurrentIndex(1）
+	 5.5.2  下拉框
+		 ui->comboBox->addItem("奔驰");
+	 5.5.3   QLabel 显示图片
+		  ui->label->setPixmap(QPixmap(":/s.png"));
+	 5.5.4   QLabel 显示gif动图
+		  QMovie* movie = new QMovie(":/th.gif");
+  		  ui->label_gif->setMovie(movie);
+	  5.5.5 播放动图
+		   movie->start();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
+、

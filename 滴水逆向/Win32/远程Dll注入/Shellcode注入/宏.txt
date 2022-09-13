@@ -1,0 +1,5 @@
+PAGE_EXECUTE_READWRITE  : 可读可写 可执行
+INVALID_HANDLE_VALUE ：  -1 
+
+
+

@@ -1,0 +1,412 @@
+
+宏定义说明：
+
+一、无参数的宏定义的一般形式为：#define  标识符   字符序列
+
+1、只作字符序列的的替换工作，不做任何语法的检查
+2、如果宏定义不当，错误要到预处理之后的编译阶段才能发现
+
+二、带参数宏定义：#define  标识符（参数表）字符序列
+
+ #define  MAX （A，B）  ( (A)>(B) ? (A) : (B)
+
+    注意：
+1、宏名称标识符与左括号之间不允许由空白符，应紧接在一起
+2、宏与函数的区别：函数分配额外的堆栈空间，而宏只是替换、
+3、为了避免出错，宏定义中给形参加上括号
+4、末尾不需要分号
+5、define可以替代多行的代码，记得后买你加 \
+ 
+   #define  MALLOC（n，type）\
+			((type*)malloc(n)*sizeof（type))
+
+malloc 注意事项
+
+ 1.使用sizeof(类型）*n 来申请内存大小
+ 2.malloc返回类型为void*类型  需要强转
+ 3.申请完内存一定要判断是否申请成功
+ 4.初始化
+ 5.使用完清空堆区
+ 6.指针值设为NULL
+
+
+重点：
+
+PE文件的第一个部分是IMAGE_DOS_HEADER，大小为64B，这里面有两个重要的数据成员。
+第一个为e_magic，这个必须为MZ，即0x5A4D。当然，0x5A4D这是典型的小端格式（Little Endian）；
+另一个重要的数据成员是最后一个成员e_lfanew，这个成员的值为IMAGE_NT_HEADERS的偏移
+
+在一个有效的 PE 文件里，Signature 字段被设置为00004550h, ASCII 码字符是“PE00”。标志这 PE 文件头的开始。
+“PE00” 字符串是 PE 文件头的开始，DOS 头部的 e_lfanew 字段正是指向这里。
+
+
+联合体：
+
+ 1、联合体的成员是共享内存空间的
+ 2、联合体的内存空间大小是联合体成员中对内存空间大小要求最大的空间大小
+ 3、联合体最多只有一个成员有效
+		
+
+PE加载的过程：
+
+1、根据Sizeoflmage的大小，开辟一块缓冲区 imageBuffer（文件在内存中的形式）
+2、根据SizeofHerder的大小，将头信息从FileBuffer（文件在硬盘上的形式）拷贝到lmageBuffer
+3、根据节表中的信息循环进FileBuffer中的节拷贝到lmageBuffer中
+
+
+空白区添加代码：
+
+call  对应的硬编码为 E8 
+jmp 对应的硬编码为 E9
+
+算法：  
+
+x：硬编码
+真正要跳转的地址 是ImageBuffer中的地址，注意文件对齐
+
+  真正要跳转的地址 = E8这条指令的下一行地址 +  x        
+  X = 真正要跳转的地址 - E8这条指令的下一行地址
+  
+  要跳转的地方 = E8当前地址 + 5 + X                  此处 E8当前地址+5 = 下一行指令地址
+  X = 要跳转的地址 - （E8的地址 + 5）              
+
+ 实现步骤：
+1、寻找OEP所对应的文件偏移位置
+2、在文件中修改OEP的指向，指向我们的空白区
+3、空白区添加我们的代码
+4、跳回原OEP指向的地址
+
+RVA与FOA相互转换：
+
+1.RVA TO FOA
+
+1.内存中的地址减去内存基址得到偏移，即RVA
+2.循环遍历节表中各个节的信息，判断在那个节中，(需要满足：内存地址+节数据对齐前大小>image偏移>内存偏移
+3.找出在那个节后，减去该节在内存中的偏移（VirtualAddress)得到在该节中的相对偏移
+4.上一步得到的该节的相对内偏移+该节在文件中的偏移(PointToRawData),即FOV
+
+2、OA TO RVA
+
+1.文件中的地址减去文件基址，得到在文件中得到偏移，即FOV
+2.循环遍历节表中各个节的信息，判断在那个节中。（文件对齐+文件偏移>file偏移>文件偏移）
+3.找出哪一个节后，减去该节在内存中的偏移(virtualAddress)得到在该节中的相对地址
+4、上一步的得到的该节的相对地址+该节在内存中的偏移(VirtualAddress），即得到RVA
+
+
+<1> 得到RVA的值，RVA=内存地址-ImageBase（ImageBase是IMAGE_OPTION_HEADER中的成员）；
+<2> 比较RVA与SizeofHeaders的大小，判断RVA是否位于PE头中，如果是的话，FOA=RVA，（SizeofHeaders是IMAGE_OPTION_HEADER中的成员）；
+<3> 判断RVA位于哪个节，
+　　	RVA >= 节.VirtualAddress
+　　	RVA <= 节.VirtualAddress + 当前节内存对齐后的大小
+　　	差值 = RVA - 节.VirtualAddress
+<4> FOA = 节.PointerToRawData + 差值
+
+
+新增节
+
+1、判断是否有足够的空间，可以添加一个节表     一个节表占40字节
+
+ 	判断条件：
+	 SizeofHeader - (DOS + 立即数据+PE标记+标准PE头+可选PE头+已存在的节表） >= 2个节表的大小
+
+2、需要修改的数据
+
+	1.添加一个新的节（可以copy一份）
+	2.再新增节后面填充一个节的大小的00
+	3.修改PE头中节的数量
+	4.修改sizeOfImage的大小
+	5.在原有数据的最后，新增一个节的数据（内存对齐后的整数倍）
+	6.修正新增节表的属性
+
+3、 在内存中添加新的节表时，需要注意：
+    新增节表中的VirtualAddress（内存中的偏移）必须是最后一个节表中VirtualAddress+max(VirtualSize,SizeOfRawData)
+    (注意： 不一定SizeOfRawData比VirtualSize大)
+    新增节表中的PoinTtoRawData(文件中的偏移)是最后一个节表中的PoinTtoRawData+SizeOfRawData
+
+
+扩大节：
+
+1、拉伸到内存
+
+2、分配一块新的空间：SizeOfImage + Ex
+
+3、将最后一个节的SizeOfRawData和VirtualSize改成 N
+
+  SizeOfRawData = VirtualSize = N
+  N = (SizeOfRawData或者VirtualSize 内存对齐的值） + Ex
+
+4、修改SizeOfImage大小
+
+    SizeOfImage = SizeOfImage + Ex
+
+
+合并节：
+
+1、拉伸到内存
+
+2、将第一个节的内存大小、文件大小改成一样
+
+      MAX = SizeOfRawData > VirtualSize ? SizeOfRawData : VirtualSize
+      SizeOfRawData = VirtuaSize = 
+      最后一个节的VirtualAddress + Max - SizeOfHeaders 内存对齐后的大小
+
+3、将第一个节的属性改为包含所有节的数据
+
+4、修改节的数量为1
+
+
+使用静态链接库：
+
+   方式一：
+	将xxx.h 和 xxx.lib 复制到要使用的项目中
+	在需要使用的文件中包含: #include "xxx.h"
+	在需要使用的文件中包含: #pragma comment (lib,  "xxx.lib")
+
+   方式二: 
+	将xxx.h 和 xxx.lib 复制到要使用的项目中
+	在需要使用的文件中包含：#include "xxx.h"  并在 Link中添加 xxx.lib；
+
+静态链接库的缺点：
+
+	使用静态生成的可执行文件体积较大，造成浪费
+	常用的printf 、memcpy、strcpy等就来自这种静态库
+
+
+动态链接库：
+
+  一、 创建DLL
+
+	1、源文件中： int __stdcall  Plus( int x, int y)     // __stdcall 内屏栈
+		      {  return x+ y; }	
+
+	2、头文件中：extern "C" _declspec (dllexport) __stdcall  int  Plus ( int  x, int y);
+
+注释：
+
+1、extern 表示这是个全局函数，可以供各个其他的函数条用；
+
+2、“C“按照C语言的方式进行编译、链接
+
+__declspec (dllexport)告诉编译器此函数为导出函数
+
+ 
+  二、使用DLL
+
+     方式一：隐式连接
+
+     步骤1：将 *.dll  *.lib 放到工程目录下面
+     步骤2：将 #pragma comment (lib , "DLL名 . lib")添加到调用文件中
+     步骤3：加入函数的声明
+
+说明：
+     __declspec(dllimort)告诉编译器此函数为导入函数：
+
+   
+    方式二：显示连接
+
+      步骤1： //第一函数指针
+
+	typedef  int (__stdcall *lpPlus)(int,  int);
+
+      步骤2：//声明函数指针变量
+
+	lpPlus  myPlus ; 
+
+      步骤3： //动态加载dll到内存中
+
+	HINSTANCE    hModule = LoadLibrary ("DllDemo.dll ");
+
+      步骤4： //获取函数地址
+
+	myPlus = (lpPlus)GetProcAddress (hModule, "_Plus@8");
+
+      步骤5： //调用函数
+
+	int  a = myPlus(10, 2);
+
+说明：
+
+Handle 是代表系统的内核对象，如文件句柄，线程句柄，进程句柄
+
+HMODULE 是代表应用程序载入的模块
+
+HINSTANCE  在win32下与 HMODULE 是相同的东西 Win16 遗留
+
+HWND 是窗口句柄
+
+起始就是一个无符号整型，Windows之所以这样设计有2个目的：
+
+1、可读性更好
+2、避免在无意中进行运算
+
+
+重定位表
+
+1、程序加载的过程：
+
+ (1). 一般情况下，EXE都是可以按照ImageBase的地址进行加载的，因为EXE拥有自己独立的4GB 的虚拟内存空间
+     但DLL 不是 DLL是有EXE使用它，才加载到相关EXE的进程空间的
+
+ (2). 为了提高搜索的速度，模块间地址也是要对齐的 模块地址对齐为10000H 也就是64k
+
+2、为什么要用重定位表？
+
+    因为编译时生成的地址 = ImageBase + RVA  这个地址在程序编译完成后，义写入文件了，如果程序加载时，
+  没有按照预定的ImageBase 载入到指定的位置，程序执行仍会按照  编译时生成的地址 去找这个值
+
+
+(1)、也就是说，如果程序能够按照预定的ImageBase来加载的话，那么就不需要重定义位表这也是为什么EXE很少
+    有重定位表，而DLL大多数都有重定位表的原因
+
+(2)、一旦某个模块没有按照ImageBase进行加载，那么所有类似上面的地址就需要修正，否则，引用的地址就是无 效的
+   
+(3)、一个EXE中，需要修正的地方会很多，那我们如何来记录都有哪些地方需要修正呢？  重定位表！！！
+
+
+重定位表结构分析：
+
+1、 通过IMAGE_DATA_DIRECTORY结构的VirtualAddress属性 找到第一个IMAGE_BACE_RELOCATION
+
+2、判断一共有几块数据： 最后一个结构的 VirtualAddress 与 SizeOfBlock 都为 0 
+
+3、具体项  宽度： 2字节
+      也就是这个数据				
+				
+ 内存中的页大小是1000H 也就是说2的12次方 就可以表示				
+ 一个页内所有的偏移地址 具体项的宽度是16字节 高四位				
+ 代表类型：值为3 代表的是需要修改的数据 值为0代表的是				
+ 用于数据对齐的数据，可以不用修改.也就是说 我们只关注				
+ 高4位的值为3的就可以了.				
+
+4、VirtualAddress  宽度： 4字节
+    当前这一块的数据，每一个低12位的值+VirtualAddress  才是真正需要修改的数据的RVA
+     真正的RVA = VirtualAddress + 具体项的低12位
+
+5、SizeOfBlock 宽度：4字节
+      当前块的总大小
+      具体项的数量 = （SizeOFBlock - 8）/ 2
+     
+
+移动导出表的步骤
+
+	第一步：在DLL中新增一个节，并返回新增后的FOA
+
+	第二步：复制 AddressOfFunctions
+	             长度：4 * NumberOfFunctions
+
+	第三步：复制AdderssOfNameOrdinals
+	             长度：NumberOfNamOrdinals * 2
+
+	第四步：复制AddressOfName
+	             长度：NumberOfNames * 4 
+
+	第五步：复制所有的函数名
+	              长度不确定，复制时直接修复AddressOfNames
+
+	第六步：复制 IMAGE_EXPORT_DIRECTOY 结构
+		
+	第七步：修复IMAGE_EXPORT_DIRECTOY 结构中的 
+		AddressOfFunctions		
+		AddressOfNameOrdinals		
+		AddressOfNames		
+
+	第八步：修复目录项中的值，指向新的IMAGE_EXPORT_DIRECTORY
+
+
+
+输出导出表过程：
+
+  1、定义导出表：
+
+        sizeof(IMAGE_IMPORT_DESCRIPTOR) 个 0 代表导入表结束
+
+  2、输出DLL名字
+
+          IMAGE_IMPORT_DESCRIPTOR  中Name   -->RVA 指向一个以0结尾的字符串
+   
+  3、遍历OriginalFirstThunk
+
+           判断最高位是否是1 如果是 那么出去最高位的值就是函数的导出序号
+
+           如果不是，那么这个值是一个RVA 指向 IMAGE_BY_NAME  结构数组 以0结尾	宽度4字节	
+            GetProcAddr(,函数的名字或者导出序号);			
+
+一、流程
+	1、File-> FileBuffer
+	2、定位导入表
+	3、循环导入表
+	4、获取导入表名字
+	5、获取INT表RVA
+	6、获取INT表的地址和序号
+	7、循环打印INT表的内容
+	8、获取IAT表RVA
+	9、获取IAT表的地址和序号
+	10、循环打印IAT表的内容
+
+
+绑定导入表结构：
+
+  PE加载EXE相关的DLL时，首先会根据IMAGE_IMPORT_DESCRIPTOR结构中的TimeDateStamp
+来判断是否要重新计算IAT表中的地址
+
+  TimeDateStamp == 0 未绑定
+  TimeDateStamp == -1 已绑定，真正的绑定时间为IMAGE_BOUND_IMPORT_DESCRIPTOR 的 TimeDateStamp
+
+//  注 ： 当IMAGE_BOUND_IMPORT_DESCRIPTOR 结构体中的 TimeDateStamp与DLL文件标准PE头中的TimeDateStamp
+             值不符时，或者DLL需要重新定位的时候，就会重新计算IAT中的值
+
+
+
+获取名称字符串思路：
+
+OffsetModuleName 不是 RVA 也不是 FOA，是使用第一个绑定导入表的RVA（即第一个_IMAGE_BOUND_IMPORT_DESCRIPTOR的RVA），
+加上OffsetModuleName 的值。得到的才是名字字符串真正的 RVA。那么其他的绑定导入表结构和 所有_IMAGE_BOUND_FORWARDER_REF 结构都一样，
+计算方法都是用当前OffsetModuleName 的值 加上 第一个绑定导入表的 RVA，注意全都是加第一个，不加别的。 
+
+dll的名字计算公式为：第一个DESCRIPTOR的值+OffsetModuleName；     
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

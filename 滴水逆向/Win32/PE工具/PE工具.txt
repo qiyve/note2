@@ -1,0 +1,78 @@
+PE工具01- 获取进程和模块
+
+    1、目标
+        需要实现一个PE文件的查看工具
+
+      左边有两个listview：
+        上方是进程列表，下方是进程列表 ，进程列表中显示当前运行的所以进程信息；
+        点击进程列表中的某一个进程，在模块列表中显示该进程的所有模块信息；
+        点击左边的PE查看，先选择一个PE文件，然后会弹出另一个窗口，显示该PE文件的信息；
+
+    2、需求分析
+        1.画界面
+        建一个Win32窗口程序；
+        可以用资源脚本分别来创建窗口，在工程中新建-》资源脚本-》拖控件
+        有两个列表窗口，分别用来显示进程信息和PE文件信息；需要两个listview控件
+        listview是Win32通用控件，使用时需要加载comctl32.lib，并且要处理WM_NOTIFY控件；
+
+        2.遍历进程
+       要得到进程信息，需要用Windows提供的API函数获取所有的进程
+        然后将进程信息写到listview中；
+        获取进程的步骤：
+            （1）引入头文件tlhelp32.h
+            （2）获取进程快照
+                    HWND  pHandle = CreateToolhelp32Snapshot(0x2,0x0);
+            （3）Process32Next(pHandle, &proc)获取进程信息；
+                    进程信息保存在PROCESSENTRY32结构中，是函数的第二个out参数；
+                    函数的第一个参数为进程快照句柄；
+                    当进程快照中没有下一个进程时，函数返回0；
+
+PROCESSENTRY32   结构如下：  
+
+ typedef   struct   tagPROCESSENTRY32     
+{  
+  DWORD   dwSize;   	//   结构大小；    
+  DWORD   cntUsage;   	//   此进程的引用计数；    
+  DWORD   th32ProcessID;      //   进程ID;    
+  DWORD   th32DefaultHeapID;   //   进程默认堆ID；    
+  DWORD   th32ModuleID;   	     //   进程模块ID；    
+  DWORD   cntThreads;   	     //   此进程开启的线程计数；    
+  DWORD   th32ParentProcessID; //   父进程ID；    
+  LONG   pcPriClassBase;  	     //   线程优先权；    
+  DWORD   dwFlags;   	     //   保留；    
+  char   szExeFile[MAX_PATH];      //   进程全名；    
+  }   PROCESSENTRY32;
+        
+        3.遍历进程的模块
+        点击一个进程，需要在下方listview中显示该进程的所有模块信息；
+        因此需要遍历进程的模块；
+        需要用到Windows提供的API函数，函数需要的参数为进程的pid；
+        为了知道pid，首先要知道是进程列表的  哪一行被点击 ；然后获取该行中表示pid的那一列；
+        判断那一行被点击需要处理WM_NOTIFY消息，通用控件都需要处理WM_NOTIFY；
+        也就是判断WM_NOTIFY消息的附加参数，条件为：进程的listview被点击，并且是右键点击时遍历模块；
+
+        遍历模块：
+	通过SendMessage发LVM_GETNEXTITEM消息，参数为LVNI_SELECTED，找到 点击的那一行 ；
+	然后SendMessage发LVM_GETITEMTEXT消息，传递行号和列号，找到该列的值即PID；
+	得到了进程PID就可以得到该进程模块信息，放到下面的listview即可；
+	通过进程PID获取该进程的快照，然后用ModulesNext遍历进程快照，模块信息保存在MODULEENTRY32结构中；
+
+       MODULEENTRY32结构：
+	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

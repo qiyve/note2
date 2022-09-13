@@ -1,0 +1,45 @@
+shell code
+
+   一段以漏洞执行的位置无关化的代码（PIC），以其经常让攻击者获得shell而得名。shellcode常常使用机器语言编写。 
+
+PIC   position independent code ： 位置无关代码
+
+ALSR： Address space layout randomization，地址空间配置随机化 防范内存损坏漏洞被利用
+
+Heap Spraying： 堆喷射   
+
+stack overflow : 栈溢出
+
+静态编译MT  : 将需要用到的CRT 静态链接到文件里 
+优点：无需在电脑上安装CRT 
+缺点：文件大， CRT 冗余 
+
+动态编译 ： 将需要用到的CRT 以DLL 导入的方式 动态链接到文件里 ，
+优点：文件小 
+缺点：需要在电脑上安装CRT 
+
+
+自定义入口点: 无需依赖CRT 体积很小  极致 
+缺点：无法使用CRT  编码繁琐
+
+增量链接：为了提高编译速度，使用 JMP 作为一些函数的链接
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

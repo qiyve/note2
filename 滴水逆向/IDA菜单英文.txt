@@ -1,0 +1,378 @@
+file
+	new instance  	    ：新的实例
+	Open		    ： 打开
+	load file		     :  加载文件
+		reload the input file    ：重新加载输入文件
+		additional binary file
+		IDS/ IDT file    ：
+		PDB file	       : 符号文件
+		DBG file
+		TDS file
+		flirt signature file 
+		parse c header file ：解析c头文件
+
+	produce file   : 生成文件
+
+		create MAP file
+		create ASM file
+		create INC file
+		create LST file
+		create EXE file
+		create DIF file
+		create C file
+		create HTML file
+		create flow chart GDL
+		create call graph GDl
+		Dump database to IDC file  ：dump一般译作转储
+		Dump typeinfo to IDC file
+	
+	script command  ： 脚本命令
+	save	            ：保存
+	save as 	            ：以....方式保存
+	take database snapshot ： 拍摄数据库快照
+	close	            ：关闭
+	quick start           ：快速启动
+	Exit 	            : 退出
+
+
+Edit： 编辑
+	copy   ： 拷贝
+	begin selection ： 选择开始
+	select all	： 全部选择
+	select identifier ： 选择标识符
+	undo	： 撤销
+	redo	： 重做
+	export data： 导出数据据
+	code		
+	data
+	struct var ：结构变量
+	strings
+		string
+		c-style(0 terminated)   ：  以0结尾的c样式字符串串
+		DOS style ($ terminated)  ：   $ 结尾
+		pascal style(1 byte length) 
+		wide pascal (2 byte length)
+		Delphi（4 byte length）
+		unicode 
+		unicode pascal （2 byte length） ： UTF16
+		unicode wide pascal（4 byte length） ： UTF32 
+		
+	array
+	undefine  ： 取消定义
+	rename	; 重命名
+	operand type  ：操作数
+	
+		offst 
+			offset（data segment） ： 数据段偏移
+			offset（current segment）： 当前段偏移
+			offset（any segment） ： 任意偏移
+			offset（user - defined）：用户偏移
+			offset（struct）： 结构体偏移
+					
+		number  ：数字
+
+			number（default）： 默认
+			hexadecimal  ： 十六进制
+			decimal	   : 十进制
+			octal	 ：八进制
+			binary	：二进制
+			filoating point ：浮点
+			toggle leading zeroes  ：切换前导零
+
+		character ：字符
+		segment   ：段
+		enum member  ：枚举成员
+		stack variable   ：栈变量
+		change sign    ：改变符号
+		bitwise negate	： 按位取反
+		manual  ： 手动
+		set operand type	：设置操作数
+	
+	comments  ：注释
+
+		copy pseudocode to disassembly ： 
+		add pseudocode comments
+		delete pseudocode comments
+		enter comment  ：修改注释
+		enter anterior lines
+		enteer posterior lines
+
+	segments  ：段
+		create segment   ：
+		edit segment  
+		delete segment  ：删除
+		move current segment  ：
+		rebase program   ： 重定向
+		change segment translation ：
+		change segment register value
+		set default segment register value
+
+	structs 
+		struct var  
+		force zero offset field  ：强制零偏移成员
+		select union member  ：选择 联合成员
+		create struct from selection ：从选区中创建结构体
+		copy field info to pointers  ：拷贝成员信息到指针
+	
+	functions   ：
+		create function 
+		edit function
+		append function tail  ：添加函数尾
+		remove fucntion tail  ；移除函数尾
+		delete fucntion        ：
+		set function end    ：设置函数结尾
+		stack variables      ；栈变量
+		change stack pointer  ：改变栈指针
+		rename register    ：重命名寄存器
+		set type	  ： 设置类型
+
+	patch program   ： 打补丁
+		
+		change byte   ：
+		change word
+		assemble   ：汇编
+		patched  bytes  ：改变字节数组
+		apply patches to input file  ：应用补丁到服务文件
+
+	other   :其他
+		specify swich idiom   ：
+		create alignment direct  ：创建一个直接的对齐
+		manual instruction   ： 
+		color instruction   ：给指令上色
+		reset decompiler information  ; 重置反编译器信息
+		toggle skippable instructions ：激活可以跳过的指定
+		decompile as call  ： 
+		toggle border
+		search for pclntab
+
+	plugins
+	
+		quick run plugins   ；快速启动
+		universal PE unpacker  ;通用PE脱壳
+		svd file management ：SVD文件管理
+		sample plugin    : 实例插件
+		jump to next fixup ：跳转到下一个修复
+		com helper
+		change the calless address ：  修改calless地址
+		universal unpacker manual reconstruct ： 万能拆包手动重构
+		hex-rays decompiler  ：  反编译 解码器
+		load dwarf file  ： 加载矮文件
+
+jump  ： 跳转
+
+	jump to operand      ： 跳转 操作数
+	jump in a new window  ； 跳转到一个新的窗口
+	jump to previous position ： 跳转到之前位置
+	jump to next position  ： 跳到下一个位置
+	empty navigation stack  : 空导航堆栈
+	jump to pseudocode  : 跳转到伪代码
+	jump to address :  跳转到地址
+	jump by name : 跳的名字
+	jump to function : 
+	jump to segment : 跳转到段
+	jump to segment register :跳转到段寄存器
+	jump to problem:  跳转到问题
+	list cross references to  : 列出交叉引用
+	list cross references from : 列表交叉引用
+	jump to xref to operand :  跳转到xref到操作数
+	jump to entry point  : 跳到入口点
+	jump to file offset   : 跳转到文件偏移
+	mark position : 标志位置
+	jump to marked position: 跳转到标记位置
+	clear mark  ：安全标志	
+
+
+search ： 搜索
+	next code
+	next data
+	next explored  ： 下一个探索
+	next unexplored ： 下一个未知的
+	immediate value  ： 立即数
+	next immediate value  : 下一个立即数
+	text 
+	next text
+	sequence of bytes  ： 字节序列
+	next sepquence of bytes  :  下一个字节序列
+	not function   : 功能
+	next void	   ： 下一个空白
+	error operand ： 错误操作数
+	all void operands ： 所有无效的操作数
+	all error operands ： 所有无效操作数和所有错误操作数
+	search direction ： 搜索方向
+	lock highlight ： 锁突出
+		
+		unassigned   
+
+view
+	open subviews   : 打开子视图
+		
+		quick view  : 快速查看
+		disassembly  :  反汇编
+		proximity browser ： 邻近的浏览器
+		generate pseudocode ： 生成的伪代码
+		hex dump  ： 十六进制转储
+		address details ：详细地址
+		exports ： 出口
+		imports ： 
+		names ： 名称
+		functions：功能
+		strings ： 字符串
+		segments ： 分段数
+		segment registers ： 段寄存器
+		selectors : 选择器
+		signatures ：特征
+		type libraries ： 类型链接库
+		structures ：
+		enumerations ：  枚举类
+		local types ： 局部类型
+		cross references ：  交叉引用
+		function calls： 函数调用
+		bookmarks  ： 书签
+		notepad       ： 文本编译器
+		problems	    ： 存在问题
+		patched bytes ：  打补丁的字节
+		undo history ：  撤销历史
+
+	graphs ： 图标
+
+		flow chart  :  流程图
+		print flow chart tabels  : 打印流程图表格
+		function calls ：函数调用
+		xrefs to ： 
+		xrefs from
+		user xrefs chart ： 用户xrefs图表
+
+
+	toolbars ： 工具栏
+
+		hide all  ： 全部隐藏
+		show all  :  全部显示
+		navigator :  导航
+		fiel ： 
+		jump
+		search
+		hide / unhide ：  隐藏 / 显示
+		analysis ： 分析
+		views :  视图
+		graph view ：图形视图
+		lists ：  列表项目
+		signatures / types  ： 签名/类型
+		structues / enumerations ： 结构/枚举
+		cross reference ： 相互对照，对照检索
+		segments ： 段
+		edit
+		operand type ： 操作数类型
+		utilities : 
+		functions  : 功能
+		enumerations：  枚举
+		structures ： 
+		comments ：注释
+		graphs ： 图形
+		debug ： 
+		debugger commands ： 除错器命令
+		breakpoints ： 断点
+		watches ： 
+		tracing ： 描图
+		diff / merge
+
+	calculator ： 计算器
+	full screen ： 全屏显示
+	graph overview ： 图概述
+	recent scripts ： 最近的脚本
+	database snapshot manager：  数据库快照管理器
+	print segment registers ： 印刷段寄存器
+	print internal flags ：打印内部旗帜
+	hide  ： 
+	unhide
+	hide all
+	unhide all
+	delete hidden range  ： 删除隐藏的范围
+	setup hidden items    ; 设置隐藏物品
+
+
+debugger  
+
+	select debugger : 选择调试器
+
+
+lumina
+ 
+	pull all metadata
+	push all metadata
+	view all metadata
+	pull selection metadata
+	push selection metadata
+	revert selection metadata
+
+
+options  ： 选择
+
+	general  ： 通用
+	colors  :   颜色
+	font  ： 字体
+	shortcuts ：  快捷键
+	show command palette  : 显示命令选项 
+	repeat last palette command ：  重复最后一个命令 选择
+	disable undo ：禁用撤销 
+	reset last palette commnand ： 重置最后一个调色板命令
+	disable undo ：  禁用撤销
+	reset undo history ： 复位撤销历史
+	assembler directives ： 汇编指令
+	name representation ： 名称表示
+	demangled names ： C++名称粉碎
+	compiler ： 编译器
+	string literals ：  字符串常量
+	setup data types : 设置数据类型
+	source paths :  来源路径
+
+
+windows 
+
+	load desktop   :  加载桌面
+	save desktop  : 保存桌面
+	delete desktop ： 删除桌面
+	reset desktop  ： 重新设置桌面
+	reset hidden messages ：  重置隐藏信息
+	windows list  ： 窗口列表
+	next windows ： 下一个窗口
+	previous windows  ： 之前的窗口
+	close windwos     : 关闭窗口
+	focus command line  ： 关注命令行
+	output window  ： 输出窗口
+	functions   ：  
+	IDA view - A   ： IDA视图- A
+	Hex view - 1   ： 十六进制视图- 1
+	structures  ： 
+	enums   ： 枚举
+	imports  : 导入
+	exports ： 导出
+
+
+
+help 
+
+	help 
+	API documentation
+		
+		python API
+		IDA SDK
+		decompiler SDK
+		IDC functions
+	
+	About program
+	Floating licenses
+
+		Setup 
+		Borrow licenses
+		return licenses
+
+	IDA home page
+	IDA subpport forum
+	send database
+	extract function
+	check for free update
+	report a bug or an issue 
+
+
+
+

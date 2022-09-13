@@ -1,0 +1,250 @@
+1.查找指定窗口：
+	FindWindow（LPCSTR lpClassName, LPCSTR lpWindowName）
+
+     功能：
+               检索顶级窗口的句柄，该窗口的类名和窗口名与指定的字符串匹配。此函数不搜索子窗口。此函数不执行区分大小写的搜索。	
+
+     函数原型：
+	HWND FindWindowA(
+ 	    [in, optional] LPCSTR lpClassName,
+ 	    [in, optional] LPCSTR lpWindowName
+	);
+
+     参数 1:   如果lpClassName 指向一个字符串，则它指定窗口类名，类名可以是向 RegisterClassName或RegisterClassEx 注册的任何名称，
+                 也可以是任何预定义的控件类名称；
+	 如果lpClassName为NULL，他将查找标题与lpWindowName参数匹配的任何窗口
+
+     参数 2:  窗口名称（窗口的标题），如果此参数为NULL，则所有窗口名称都匹配
+
+     返回值：成功返回值是具有指定类名和窗口名的窗口的句柄，失败返回NULL，若需获取扩展错误信息，可调用GetLastError  
+
+
+2.窗口控制：
+     
+	SwitchToThisWindow（HWND hwnd, BOOL fUnknown）
+
+      功能 ：
+                将焦点切换到指定的窗口，并将其置于前台。
+	
+     函数原型：
+	void SwitchToThisWindow(
+ 	   [in] HWND hwnd,
+	   [in] BOOL fUnknown
+	  );
+     
+     参数1：窗口的句柄 
+
+     参数2：此参数的TRUE表示窗口正在切换到使用Alt/Ctl+Tab键序列。否则，此参数应为FALSE
+
+3.查找子窗口:
+	FindWindowEx();
+
+     功能：
+	检索其类名和窗口名与指定字符串匹配的窗口的句柄，该函数搜索子窗口，从指定子窗口后面的子窗口开始
+	
+     函数原型：
+	HWND FindWindowExA(
+  	   [in, optional] HWND   hWndParent,
+  	   [in, optional] HWND   hWndChildAfter,
+	   [in, optional] LPCSTR lpszClass,
+ 	   [in, optional] LPCSTR lpszWindow
+	);
+
+     参数1：要搜索其子窗口的父窗口句柄
+
+     参数2：子窗口的句柄，搜索从z序中的下一个子窗口开始。子窗口必须是 hwndParent 窗口的直接子窗口而非后代窗口
+ 	如果hwndChildAfter 为NULL，则搜索从hwndparent 的第一个子窗口的开始
+	如果hwndParent 和 hwndChildAfter同时为NULL，则函数查找所有的顶层窗口及消息窗口。
+
+     参数3： 指向一个指定了类名的空结束字符串，或一个标识类名字符串的成员指针
+	 如果该参数为一个成员，则它必须为前次调用theGlobaIAddAtom函数产生的全局成员
+	该成员为16位，必须位于lpClassName的低16位，高位必须为0
+
+     参数4：窗口名称（窗口的标题），如为NULL，所有窗口名称都匹配
+
+
+     返回值：返回值为具有指定类名和窗口名的窗口句柄，如果函数失败，返回值为NULL
+
+
+枚举窗口控件：
+	 EnumChildWindow()
+
+     功能：通过将句柄传递给每个子窗口，依次传递给应用程序定义的回调函数，枚举属于指定父窗口的子窗口，EnumChildWindows将
+	继续，直到枚举最后一个子窗口或回调函数返回FALSE。
+
+     函数原型：
+	BOOL EnumChildWindows(
+	     [in, optional] HWND        hWndParent,
+  	     [in]           WNDENUMPROC lpEnumFunc,
+ 	     [in]           LPARAM      lParam
+	   );
+	
+     参数1：要枚举其子窗口的父窗口的句柄，如果此参数为NULL,则此函数等效于EnumWindows
+
+     参数2：指向应用程序定义的回调函数的指针。
+
+     参数3：要传递给回调函数的应用程序定义的值
+
+
+枚举打开所有窗口：
+	EnumWindows();
+
+     功能：
+	枚举屏幕上的所有顶级窗口，方法是将句柄传递给每个句柄，依次传递给应用程序定义的回调函数
+	EnumWindows将一直持续到枚举最后一个顶级窗口或回调函数返回FALSE
+
+     函数原型：
+	BOOL EnumWindows(
+ 	   [in] WNDENUMPROC lpEnumFunc,
+ 	   [in] LPARAM      lParam
+	   );
+
+     参数1：指向应用程序定义的回调函数的指针。
+
+     参数2：要传递给回调函数的应用程序定义的值
+
+
+模拟鼠标单击
+
+     坐标结构体：
+
+	RECT 结构通过其左上角和右下角的坐标定义矩形。
+    	 typedef struct tagRECT {
+ 	    LONG left;
+ 	    LONG top;
+ 	    LONG right;
+ 	    LONG bottom;
+	 } RECT, *PRECT, *NPRECT, *LPRECT;	
+     
+     left：指定矩形左上角的x坐标
+
+     top：指定矩形左上角的y坐标
+
+     right：指定矩形右下角的x坐标	
+
+     bottom：指定矩形右上角的y坐标
+
+     
+     获取坐标函数：    
+	GetWindowRect()
+
+     功能：检索指定窗口的边框的尺寸，尺寸以相对于屏幕左上角的屏幕坐标给处。
+
+     函数原型：
+	BOOL GetWindowRect(
+  	     [in]  HWND   hWnd,
+  	     [out] LPRECT lpRect
+	   );
+
+     参数1：窗口的句柄
+
+     参数2：指向RECT结构的指针，该结构体接收窗口左上角和右下角的屏幕坐标
+
+     返回值：成功返回 非零值，失败返回 零 0
+
+
+     设置鼠标位置：
+	SetCursorPos ()
+
+     功能：将光标移动到指定的屏幕坐标，如果新坐标不在最近CilpCursor 函数调用设置的屏幕矩形内，则系统会自动调整坐标，
+	以便光标保持在矩形内     
+
+     函数原型：
+	BOOL SetCursorPos(
+	  [in] int X,
+ 	  [in] int Y
+	 );
+          
+     参数1：光标的新X坐标，以屏幕坐标表示 
+
+     参数2：光标的新Y坐标，以屏幕坐标表示 	
+
+
+     鼠标单击：
+	mouse_event()
+
+     功能：mouse_event功能可合成鼠标运动和按钮单击
+
+     函数原型：
+	void mouse_event(
+  	   [in] DWORD     dwFlags,
+  	   [in] DWORD     dx,
+ 	   [in] DWORD     dy,
+  	   [in] DWORD     dwData,
+ 	   [in] ULONG_PTR dwExtraInfo
+	 );
+
+     参数1：控制鼠标运动和按钮单击的各个方面，
+
+
+模拟键盘：
+	keybd_event()
+
+     功能：合成击键。系统可以使用这种合成的击键来生产 WM_KEYUP 或 WM_KEYDOWN 消息。键盘驱动程序的中断
+	处理程序调用keybd_event 函数
+
+     函数原型：
+	void keybd_event(
+  	   [in] BYTE      bVk,
+  	   [in] BYTE      bScan,
+ 	   [in] DWORD     dwFlags,
+ 	   [in] ULONG_PTR dwExtraInfo
+	  );
+
+     参数1：虚拟钥匙代码。代码必须是介于1到254之间的值
+
+     参数2：密钥的硬件扫描代码。
+
+     参数3：控制功能操作的各个反面， 
+
+     参数4：与击键关联的附加值
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,11 @@
+ ALT i  立即数
+alt t   文本
+alt b   数组
+h       十六进制
+shift  f12   字符串窗口
+u       
+a       以字符串解析此处数据
+alt  a  
+
+修改gb2312
+进到 options  Grennl   strings    default 8 - bit   右键 insert   输入gb2312 
