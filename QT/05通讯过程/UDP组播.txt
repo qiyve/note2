@@ -1,0 +1,27 @@
+UDP组播创建步骤：
+	
+	1、.pro 导入network 
+
+	2、头文件定义  QUdpSocket 成员指针  构造函数初始化
+
+	3、设置组播属性： setSocketOption(QAbstractSocket::MulticastTtlOption, value)；
+
+	4、connected 连接套接字 及信号  &QUdpSocket::readyRead 
+
+	5、定义读取数据槽函数  
+		hasPendingDatagrams( ) 有数据被读取 返回true 反之返回false 
+		readDatagram() // 参数1 缓冲区地址  参数2：缓冲区大小  参数3：主机IP 格式为QhostAddress*的变量地址  参数4：端口号 格式为uint16的变量地址
+ 
+	6、通过控件获取用户输的端口及IP 封装按钮  实现加入组播  
+
+	7、加入组播 需要先绑定 端口 bind(QHostAddress::AnyIPv4, groupPort, QUdpSocket::ShareAddress | QUdpSocket::ReuseAddressHint))  
+		 QUdpSocket::ShareAddress | QUdpSocket::ReuseAddressHint  允许多个套接字绑定同一个端口/IP； 提示尝试重新绑定服务，即使端口/IP 已经被另一个套接字绑定
+
+	8、加入组播 joinMulticastGroup( 要加入的IP );	
+
+	9、发送数据报 writeDatagram( ) 参数1 数据 参数2 IP地址 参数3 端口号
+
+	10、退出组播 leaveMulticastGroup ( 退出IP);    解除绑定   m_udpSocket->abort();
+
+	注：退出后如果还继续在组播的端口/IP 还是可以发送消息，但 可以的通过把控件设置为不可点击来避免这类问题
+	
