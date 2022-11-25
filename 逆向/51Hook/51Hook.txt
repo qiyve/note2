@@ -1,0 +1,164 @@
+逆向分析步骤：
+	1、首先运行程序，观察程序有啥作用、。
+	2、明确我们的目的。
+	3、找到关键代码的位置：
+		字符串查找
+		根据关键API下断点，然后返回到上层调用，找到关键代码。
+
+TLS用途	
+	在安全领域中，TLS常被用来处理诸如反调试，抢占执行等操作
+TLS回调函数：
+	首先加上编译选项
+	1、#pragma comment （linker，“INCLUDE:__tls_used")
+	2、 /*
+		 注册TSL函数. CRT$XLX 的作用
+		CRT表示 C Runtime 机制
+		X表示标识名随机
+		L表示TLS Callback section 
+		X 也可以换成B~Y 任意一个字符 
+	      */
+	#pargma data_seg(".CRT$XLX")
+	//存储回调函数地址 
+	PIMAGE_TLS_CALLBACK pTLS CALLBACK[] = { TLS_CALLBACK1, TLS_CALLBACK2, 0);
+	#pargma data_seg()
+
+TLS函数何时被调用
+
+	#define DLL_PROCESS_ATTACH 1   //进程创建时
+	#define DLL_THREAD_ATTACH 2     //线程创建时
+	#define DLL_THREAD_DETACH 3    //线程销毁时
+	#define DLL_PROCESS_ATTACH 0   //进程销毁时
+	先调用TLS函数 在执行main函数
+
+内存管理
+	API名称		备注
+	HeapCreate	在进程中创建一个堆对象，返回一个句柄
+	GetProcessHeap	获取当前进程中的一个堆，返回一个句柄
+	GetProcessHeaps	获取进程中的所有堆
+	HeapAlloc	从指定的堆上分配块
+	HeapReAlloc
+	HeapFree	重新分配内存，改变已经分配好的堆内存大小
+	HeapSize	获取堆的大小
+	HeapDestroy	销毁堆对象
+
+虚拟内存相关API
+	VirtualAlloc	分配或者预定一块虚拟内存
+	VirtualAllocEx	可以在其他进程分配或者预定一块内存
+	VirtualFree	释放内存
+	VirtualFreeEx	可以释放其他进程内存
+	VirtualLock	锁定内存不能交换到硬盘
+	VirtualUnLock	解锁
+	VirtualProtect	修改内存读写执行属性
+	VirtualProtectEx	可以修改其他进程内存属性
+	ReadProcessMemory	读取远程进程内存
+	WriteProcessMemory	写入数据到远程进程内存
+	VirtualQuery	查询内存状态
+	VirtualQueryEx	
+
+文件映射
+	概念：
+	文件映射（Mapping）是一种将文件内容映射到进程虚拟内存的技术。
+	映射成功的文件可以用视图，来引用这段内存，从而达到操作位于此段内存中的文件的目的。
+
+	特点：
+	可以在不同的进程间共享数据（跨进程）
+	
+	正常操作文件：
+	CreateFile--》文件句柄---》通过文件句柄将文件内容读到虚拟内存，修改内容，重写写入到文件
+
+	文件映射：
+	CreateFile打开文件---》创建文件映射对象---》将文件映射到内存---》对内存的操作直接映射到文件当中
+
+文件映射相关API：
+ 			
+	CreateFileMapping	创建一个Mapping对象
+	OpenFileMapping	打开一个Mapping对象
+	MapViewOfFile	将maping对象的文件映射到内存中
+	UnmapViewOfFile	取消文件映射
+	FlushViewOfFile	刷新缓存区，将映射在内存中的文件写回到硬盘中
+
+DLL注入：
+	将一个不属于某进程的DLL文件加载到该进程当中，称之为DLL注入。
+	Dll注入初衷是给第三方的应用程序进行一个功能的扩展。
+DLL注入方式：
+	1) 远程线程注入
+	2) 消息钩子注入
+	3) 劫持进程创建注入
+	4) 注册表注入
+	5) Apc注入
+	6) ComRes注入
+	7) 依赖可信进程注入
+	8) 输入法注入
+
+DLL注入相关API
+	OpenProcess		打开远程进程
+	VirtualAllocEx		在远程进程中申请内存空间
+	WriteProcessMemory	写入数据到远程进程
+	CreateRemoteThread	创建远程线程
+	Loadlibrary		加载模块
+	WaitForSingleObject	等待信号
+	VirtualFreeEx		释放远程进程内存空间
+	CloseHandle		关闭句柄
+
+
+
+	
+
+	
+
+
+	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
