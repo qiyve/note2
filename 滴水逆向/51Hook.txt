@@ -4,3 +4,76 @@
 	3、找到关键代码的位置：
 		字符串查找
 		根据关键API下断点，然后返回到上层调用，找到关键代码。
+
+TLS用途	
+	在安全领域中，TLS常被用来处理诸如反调试，抢占执行等操作
+TLS回调函数：
+	首先加上编译选项
+	1、#pragma comment （linker，“INCLUDE:__tls_used")
+	2、 /*
+		 注册TSL函数. CRT$XLX 的作用
+		CRT表示 C Runtime 机制
+		X表示标识名随机
+		L表示TLS Callback section 
+		X 也可以换成B~Y 任意一个字符 
+	      */
+	#pargma data_seg(".CRT$XLX")
+	//存储回调函数地址 
+	PIMAGE_TLS_CALLBACK pTLS CALLBACK[] = { TLS_CALLBACK1, TLS_CALLBACK2, 0);
+	#pargma data_seg()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
