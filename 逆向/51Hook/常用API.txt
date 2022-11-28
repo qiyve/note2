@@ -1,0 +1,328 @@
+“*****”表示常用API
+
+拦截字符串相关:
+bp GetDlgItemTextA(W)              —>获取指定输入框输入字符串*****
+bp GetDlgItemInt                   —>获取对话框整数值
+bp GetWindowTextA(W)               —>取得一个窗体的标题（caption）文字，或者一个控件的内容*****
+bp GetDIgItem                      —>获取按钮事件代码(断输入框)*****
+bp GetwindowTextLengthA            —>调查窗口标题文字或控件内容的长短******
+bp GetWindowWord                   —>获得指定窗口结构的信息
+
+拦截对话框相关:
+bp MessageBeep                     —>播放一个系统声音。系统声音的分配方案是在控制面板里决定的
+bp MessageBoxA(W)                  —>创建消息框*****
+bp MessageBoxExA(W)                —>创建消息框
+bp MessageBoxIndirect(A)           —>创建定制消息框
+bp DialogBox                       —>从资源模板建立一模态对话窗
+bp DialogBoxParamA(W)              —>从资源模板建立一模态对话窗
+bp DialogBoxIndirect               —>从内存模板建立一模态对话窗
+bp DialogBoxIndirectParam          —>从内存模板建立一模态对话窗
+bp CreateDialog                    —>从资源模板建立一非模态对话窗
+bp CreateDialogParam(A)            —>从资源模板建立一非模态对话窗
+bp CreateDialogIndirect            —>从内存模板建立一非模态对话窗
+bp CreateDialogIndirectParam(A)    —>从内存模板建立一非模态对话窗
+bp EndDialog                       —>结束一模态对话窗
+bp GreateWindowExA(W)              —>获取指定设备场景的窗口范围
+bp ShowWindow                      —>控制窗口的可见性
+bp UpdateWindow                    —>强制立即更新窗口
+
+对于VB的程序用bp MessageBoxA是无法断下来的，用bp rtcMsgBox
+
+拦截窗口相关：
+bp CreateWindow             —>创建窗口
+bp CreateWindowEx(A)        —>创建窗口
+bp ShowWindow               —>显示窗口
+bp UpdateWindow             —>更新窗口
+bp GetWindowTExt(A)         —>获取窗口文本
+
+拦截警告声相关：
+bp MessageBeep               —>播放一个系统声音。系统声音的分配方案是在控制面板里决定的
+
+拦截剪贴板相关：
+bp GetClipboardData         —>获取剪贴板数据
+
+功能限制拦截相关:
+bp EnableMenuItem    —>允许、禁止或变灰指定的菜单条目
+bp EnableWindow      —>允许或禁止鼠标和键盘控制指定窗口和条目（禁止时菜单变灰）
+
+拦截广告相关:
+bp ShellExecuteExA    —>查找与指定文件关联在一起的程序的文件名
+
+程序自己打开网页，可以直接搜索打开网页的地址。然后向上查找关键跳就OK了。
+
+时间处理函数相关:
+bp CompareFileTime          —>比较两文件时间
+bp GetFileTime              —>获取文件建立，最后访问，修改时间
+bp GetLocalTime             —>获取当前本地时间*****
+bp GetSystemTime            —>获取当前系统时间
+bp GetCurrentTime           —>获取当前时间（16位）
+bp GetTickCount             —>获取windows启动至现时毫秒
+bp SetFileTime              —>设置文件时间
+bp SetLocalTime             —>设置本地时间 dExecutableA 查找与一个指定文件关联在一起的程序的文件名
+bp SetTimer                 —>创建定时器
+bp TimerProc                —>定时器超时回调函数
+
+软件狗相关:
+bpio -h 278R
+bpio -h 378R
+bp CreateFileA　                —>开和创建文件、管道、邮槽、通信服务、设备以及控制台
+bp DeviceIOControl              —>对设备执行指定的亲作
+bp FreeEnvironmentStringsA      —>翻译指定的环境字串块(对付HASP非常有效)
+
+注册表相关:
+bp RegOpenKeyA              —>打开一个现有的注册表项 *****
+bp RegOpenKeyExA            —>打开一个现有的注册表项
+bp RegCreateKeyA            —>在指定的项下创建或打开一个项
+bp RegCreateKeyExA          —>在指定项下创建新项的更复杂的方式
+bp RegDeleteKeyA            —>删除现有项下方一个指定的子项
+bp RegDeleteValueA          —>删除指定项下方的一个值
+bp RegQueryValueA           —>获取一个项的设置值
+bp RegQueryValueExA         —>获取一个项的设置值
+bp RegSetValueA             —>设置指定项或子项的值
+bp RegSetValueExA           —>设置指定项的值
+bp RegCloseKey              —>关闭系统注册表中的一个项（或键）
+
+INI初始化文件相关:
+bp GetPrivateProfileStringA        —>为初始化文件中指定的条目取得字串*****（凡是重启验证多数都有效）
+bp GetPrivateProfileInt            —>为初始化文件（.ini文件）中指定的条目获取一个整数值
+bp WritePrivateProfileStringA      —>在初始化文件指定小节内设置一个字串
+bp WritePrivateProfileInt          —>初始化文件中一个指定的小节设置所有项名和值
+
+key文件相关:
+bp Getprivateprofileint         —>为初始化文件中指定的条目获取一个整数值 *****
+bp ReadFile                     —>从文件中读出数据
+bp CreateFileA　                —>开和创建文件、管道、邮槽、通信服务、设备以及控制台
+
+win进程操作: 获取（返回）
+bp FindExecutableA          —>查找与一个指定文件关联在一起的程序的文件名
+bp FreeLibray               —>释放指定的动态链库
+bp GetCurrentProcess        —>获取当前进程的一个伪（虚拟）句柄*****（脱壳常用断点）
+bp GetCurrentProcessId      —>获取当前进程一个唯一的标识符
+bp OpenMutexA               —>使程序把父进程当成子进程运行（双进程脱壳）
+bp GetCurrentThreadId       —>返回当前进程 ID *** 壳常用来返回OEP
+bp GetCurrentThread         —>获取当前线程的一个伪句柄
+bp GetExitCodeProces        —>获取一个已结束进程的退出代码
+bp GetExitCodeThread        —>获取一个已结束线程的退出代码
+bp GetModuleHandleA         —>获取一个应用程序或动态链接库的模块句柄*****（处理Magic JMP经常用这个）
+bp GetPriorityClassA        —>获取特定进程的优先级别
+bp LoadLibraryA             —>载入指定的动态链接库，并将它映射到当前进程使用的地址空间
+bp LoadLibraryExA           —>装载指定的动态链接库，并为当前进程把它映射到地址空间
+bp LoadModule               —>载入一个windows应用程序，并在指定的环境中运行
+bp CreateProcessA           —>创建一个新进程
+bp TerminateProcess         —>结束一个进程
+bp ExitProcess              —>以干净的方式关闭一个进程
+bp ResumeThread             —>恢复线程的执行（脱捆绑壳）
+bp SuspendTread             —>暂停线程（脱捆绑壳）
+bp VirtualAlloc             —>申请空间存放资源（脱捆绑壳）
+bp VirtualFree              —>释放指定地址资源（脱捆绑壳）
+bp VirtualProtect           —>保护指定地址资源（脱捆绑壳）
+
+CD-ROM或磁盘相关:
+bp GetDiskFreeSpaceA       —>获取与一个磁盘的组织有关的信息，以及了解剩余空间的容量
+bp GetDiskFreeSpaceExA     —>获取与一个磁盘的组织以及剩余空间容量有关的信息
+bp GetFullPathNameA        —>获取指定文件的详细路径
+bp GetDriveTypeA           —>判断一个磁盘驱动器的类型
+bp GetLogicalDrives        —>判断系统中存在哪些逻辑驱动器字母
+bp GetVolumeInformat       —>ionA 获取与一个磁盘卷有关的信息
+bp GetWindowsDirectoryA    —>获取Windows目录的完整路径名
+bp GetSystemDirectoryA     —>取得Windows系统目录（即System目录）的完整路径名
+bp GetFileAttributesA(W)   —>判断指定文件的属性
+bp GetFileSize             —>判断文件长度
+bp GetDriveType            —>判断一个磁盘驱动器的类型
+bp GetLastError            —>返回扩充出错代码
+bp ReadFile                —>从文件中读出数据
+
+光盘破解相关:
+win16:
+bp getvolumeinformation             —>获取与一个磁盘卷有关的信息
+bp getdrivetype                     —>判断一个磁盘驱动器的类型
+win32:
+bp GetDriveTypeA                 —>获取磁盘驱动器类型
+bp GetLogicalDrives              —>获取逻辑驱动器符号
+bp GetFullPathNameA              —>获取指定文件的详细路径
+bp GetWindowsDirectoryA　        —>获取Windows目录的完整路径名
+bp GetLogicalDriveStringsA       —>获取当前所有逻辑驱动器的根驱动器路径
+
+文件访问相关:
+bp lcreat                      —>创建一个文件
+bp CreateDirectoryA            —>创建一个新目录
+bp CreateDirectoryExA          —>创建一个新目录
+bp CreateFileMappingA          —>创建一个新的文件映射对象
+bp CreateFileA                 —>创建或打开文件、管道、邮槽、通信服务、设备以及控制台  *****
+bp RemoveDirectoryA            —>删除指定目录
+bp DeleteFileA                 —>删除指定文件
+bp lopen                     —>以二进制模式打开指定的文件
+bp OpenFile                  —>打开文件，能执行大量不同的文件操作  (32位)
+bp OpenFileMappingA          —>打开一个现成的文件映射对象
+bp SetEndOfFile              —>针对一个打开的文件，将当前文件位置设为文件末尾
+bp CloseHandle               —>关闭一个内核对象。其中包括文件、文件映射、进程、线程、安全和同步对象等
+bp lclose                    —>关闭指定的文件
+bp ReadFile               —>从文件中读出数据(32位) *******
+bp ReadFileEx             —>与ReadFile相似，只是它只能用于异步读操作，并包含了一个完整的回调
+bp lread                  —>将文件中的数据读入内存缓冲区
+bp hread                  —>将文件中的数据读入内存缓冲区 *******
+bp lwrite                 —>将数据从内存缓冲区写入一个文件
+bp hwrite                 —>将数据从内存缓冲区写入一个文件
+bp WriteFile              —>将数据写入一个文件
+bp WriteFileEx            —>与WriteFile类似，只是它只能用于异步写操作，并包括了一个完整的回调
+bp MapViewOfFile          —>将一个文件映射对象映射到当前应用程序的地址空间
+bp MapViewOfFileEx        —>将一个文件映射对象映射到当前应用程序的地址空间
+bp FindFirstFileA         —>根据文件名查找文件
+bp SearchPathA            —>查找指定文件
+bp MoveFileA              —>移动文件
+bp CopyFileA              —>复制文件
+bp SetCurrentDirectoryA       —>设置当前目录
+bp SetFileAttributesA         —>设置文件属性
+bp llseek                     —>设置文件中进行读写的当前位置
+bp SetFilePointer             —>在一个文件中设置当前的读写位置
+bp SetFileTime                —>设置文件的创建、访问及上次修改时间
+bp GetFileTime                —>取得指定文件的时间信息
+bp CompareFileTime            —>对比两个文件的时间
+bp GetBinaryTypeA             —>判断文件是否可以执行
+bp GetFileAttributesA         —>判断指定文件的属性
+bp GetFileSize                —>判断文件长度
+bp FindNextFileA           —>根据调用FindFirstFile函数时指定的一个文件名查找下一个文件
+bp FindClose               —>关闭由FindFirstFile函数创建的一个搜索句柄
+bp GetFileType             —>在给出文件句柄的前提下，判断文件类型
+bp GetSystemDirectory      —>取得Windows系统目录（即System目录）的完整路径名
+
+VB函数:
+………………………………………………………………
+VB 破解快速找事件 ctrl+B搜索816C24 然后分别在他上面的JMP设置F2断点，运行注册模块进行注册。
+在那个JMP中断就是从这个JMP开始调用注册模块。
+
+在函数中的缩写:
+bool —>布尔型数据(TRUE 或  FALSE)
+str  —>字符串型数据 STRING
+i2   —>字节型数据或双字节整型数据  BYTE or Integer
+ui2  —>无符号双字节整型数据
+i4   —>长整型数据(4字节)  Long
+r4   —>单精度浮点型数据(4字节)  Single
+r8   —>双精度浮点型数据(8字节)  Double
+cy 　—>（8 个字节）整型的数值形式 Currency
+var  —>变量     Variant
+fp 　—>浮点数据类型  Float Point
+cmp  —>比较   compare
+comp —>比较   compare
+Eq   —>相等   equal
+Ne   —>不等于
+Le   —>小于或等于
+Lt   —>小于
+Ge   —>大于或等于
+Gt   —>大于
+
+对话框:
+bpx rtcMsgBox       —>显示一信息对话框 ******
+
+窗体常用:
+bpx DestroyWindow         —>破坏（即清除）指定的窗口以及它的所有子窗口******
+bpx mouseevent            —>模拟一次鼠标事件(鼠标中断)
+bpx postquitmessage       —>将一条消息投递给应用程序。这条消息由应用程序的内部GetMessage循环获得，但不会传给一个特定的窗口
+bpx vbaVarTstEq           —>检验指定变量是否相等 判断是否注册的函数******
+
+下BPX vbaVarTstEq 下断点后，shift+F9运行N次到出现错误提示窗口，然后N-1次shift+F9运行。
+alt+F9返回，就可以到关键地方。
+
+拦截警告声:
+bpx rtcBeep       —>扬声器提示
+
+数据移动:
+bpx vbaVarCopy    —>数据移动将一个变量值串拷贝到内存
+bpx vbaVarMove    —>数据移动变量在内存中移动，或将一个变量值串拷贝到内存
+bpx vbaStrMove    —>移动字符串
+bpx vbaStrCopy    —>移动字符串 将一个字符串拷贝到内存，类似于 Windows API HMEMCPY
+
+数据类型转换:
+bpx vbaI2Str        —>将一个字符串转为8 位（1个字节）的数值形式(范围在 0 至 255 之间) 或2 个字节的数值形式(范围在 -32,768 到 32,767 之间)。
+bpx vbaI4Str        —>将一个字符串转为长整型(4个字节)的数值形式(范围从-2,147,483,6482,147,483,647)
+bpx vbar4Str        —>将一个字符串转为单精度单精度浮点型(4个字节)的数值形式
+bpx vbar8Str        —>将一个字符串转为双精度单精度浮点型(8个字节)的数值形式
+bpx VarCyFromStr    —>(仅VB6库. 要调试，则在WINICE.DAT里必须有 OLEAUT32.DLL)字符串到变比型数据类型
+bpx VarBstrFromI2   —>(仅VB6库. 要调试，则在WINICE.DAT里必须有 OLEAUT32.DLL)整型数据到字符串:
+
+数值运算:
+bpx vbaVarAdd      —>两个变量值相加
+bpx vbaVarIdiv     —>除整，第一个变量除以第二个变量，得到一个整数商
+bpx vbaVarSub      —>第一个变量减去第二个变量
+bpx vbaVarMul      —>两个变量值相乘
+bpx vbaVarDiv      —>除
+bpx vbaVarMod      —>求余
+bpx vbaVarNeg      —>取负
+bpx vbaVarPow      —>指数
+bpx vbavarxor      —>两个变量值做异或运算
+
+针对变量:
+bpx vbaVarCompEq       —>比较局部变量是否相等
+bpx vbaVarCompNe       —>比较局部变量是否不等于
+bpx vbaVarCompLe       —>比较局部变量小于或等于
+bpx vbaVarCompLt       —>比较局部变量小于
+bpx vbaVarCompGe       —>比较局部变量大于或等于
+bpx vbaVarCompGt       —>比较局部变量大于
+
+VB的指针:
+THROW
+
+程序结构:
+bpx vbaVarForInit  —>重复执行初始化
+bpx vbaVarForNext  —>重复执行循环结构， For… Next…  (Loop)
+
+比较函数:
+bpx vbaStrCmp      —>比较字符串是否相等 ******
+bpx vbaStrComp     —>比较字符串是否相等 ******
+bpx vbaVarTstEq    —>检验指定变量是否相等
+bpx vbaVarTstNe    —>检验指定变量是否不相等
+bpx vbaVarTstGt    —>检验指定变量大于
+bpx vbaVarTstGe    —>检验指定变量大于或等于
+bpx vbaVarTstLt    —>检验指定变量小于
+bpx vbaVarTstLe    —>检验指定变量小于或等于
+
+字符串操作:
+bpx vbaStrCat       —>用字符串的操作，就是将两个字符串合起来，在VB中只有一个&或+
+bpx vbaStrLike
+bpx vbaStrTextComp  —>与指定文本字符串比较
+bpx vbaStrTextLike
+bpx vbaLenBstr     —>字符串长度
+bpx vbaLenBstrB    —>字符串长度
+bpx vbaLenVar      —>字符串长度
+bpx vbaLenVarB     —>字符串长度
+bpx rtcLeftCharVar   —>截取字符串，从字符串左边取相应字符，VB中的用法：left(“字符串”,”从左边开始取几个字符”)
+bpx vbaI4Var         —>截取字符串
+bpx rtcRightCharVar  —>截取字符串，从字符串右边取相应字符，VB中的用法：Right(“字符串”,”从右边开始取几个字符”)
+bpx rtcMidCharVar    —>截取字符串，VB中的MID函数，用法MID(“字符串”,”开始的位置”,”取几个字符”)
+bpx vbaInStr         —>查找字符串位置
+bpx vbaInStrB        —>查找字节位置
+bpx vbaStrCopy       —>复制字符串
+bpx vbaStrMove       —>移动字符串
+bpx rtcLeftTrimVar   —>删除字串的空白
+bpx rtcRightTrimVar  —>删除字串的空白
+bpx rtcTrimVar       —>删除字串的空白
+bpx vbaRsetFixstrFree   —>字符串往右对齐
+bpx vbaRsetFixstr       —>字符串往右对齐
+bpx vbaLsetFixstrFree   —>字符串往左对齐
+bpx vbaLsetFixstr       —>字符串往左对齐
+bpx vbaStrComp          —>字符串比较
+bpx vbaStrCompVar       —>字符串比较
+bpx rtcStrConvVar2        —>字符串类型转换
+bpx rtcR8ValFromBstr      —>把字符串转换成浮点数
+bpx MultiByteToWideChar   —>ANSI字符串转换成Unicode字符串
+bpx WideCharToMultiByte   —>Unicode字符串转换成ANSI字符串
+bpx rtcVarFromFormatVar   —>格式化字符串
+bpx rtcUpperCaseVar       —>小写变大写
+bpx rtcLowerCaseVar       —>大写变小写
+bpx rtcStringVar          —>重复字符
+bpx rtcSpaceVar           —>指定数目空格
+bpx rtcAnsiValueBstr      —>传回字符码（返回第一个字符的字符代码）
+bpx rtcByteValueBstr      —>传回字符码（返回第一个字节的字符代码）
+bpx rtcCharValueBstr      —>传回字符码（返回第一个Unicode字符代码）
+bpx rtcVarBstrFromAnsi    —>传回字符（返回 String，其中包含有与指定的字符代码相关的字符 ）
+bpx rtcVarBstrFromByte    —>传回字符（返回 String，其中包含有与指定的字符代码相关的单字节）
+bpx rtcVarBstrFromChar    —>传回字符（返回 String，其中包含有与指定Unicode 的 String）
+
+解自校验:
+bpx CreateFileA              —>打开和创建文件、管道、邮槽、通信服务、设备以及控制台（通用大部分自校验）*******
+bpx GetFileSize              —>判断文件长度
+bpx SetFilePointer           —>在一个文件中设置当前的读写位置*******
+bpx ExitProcess              —>以干净的方式关闭一个进程
+bpx TerminateProcess         —>结束一个进程
+bpx rtcFileLen               →对付vb程序***
+bpx rtcFileLength            →对付vb程序
