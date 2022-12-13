@@ -1,0 +1,160 @@
+
+
+typedef struct _TEB {
+		PVOID Reserved1[12];
+		PPEB  ProcessEnvironmentBlock;
+		PVOID Reserved2[399];
+		BYTE  Reserved3[1952];
+		PVOID TlsSlots[64];
+		BYTE  Reserved4[8];
+		PVOID Reserved5[26];
+		PVOID ReservedForOle;
+		PVOID Reserved6[4];
+		PVOID TlsExpansionSlots;
+	} TEB, * PTEB;
+
+
+typedef struct _TEB {
+		+0x00 ：_NT_TIB  NtTib;
+		+0x30：_PEB* PPEB  ;
+
+	} TEB, * PTEB;
+
+
+NtTib：线程信息块
+typedef struct _NT_TIB {
+    	struct _EXCEPTION_REGISTRATION_RECORD *ExceptionList;
+   	 PVOID StackBase;
+    	PVOID StackLimit;
+    	PVOID SubSystemTib;
+     	union {
+     		 PVOID FiberData;
+        		DWORD Version;
+             	         };
+    PVOID ArbitraryUserPointer;
+    struct _NT_TIB *Self;
+} NT_TIB;
+
+
+ExceptionList : 用于操作系的SEH( SEH  windows的异常处理机制    大量用于反调试程序！）
+
+PEB: Process Envirorment Block 
+进程环境块：存放进程相关的信息，我们需要的东西都在其中
+
+1、TEB的访问
+实现：分析API NtCurrentTeb（）
+
+	push	ebp
+	mov	ebp，esp	
+	mov	eax， dword ptr fs:[0x18]
+	pop	ebp
+	retn
+通过观察可以发现FS存放的就是TEB结构体的首地址
+由此得出FS : [ 0x30] == PEB的指针
+
+2、PEB
+ struct _PEB {
+		+0x00c ：_PEB_LDR_DATA*  Ldr;
+		
+	} 
+ struct _PEB_LDR_DATA {
+		+0x000 ：Uint  length;
+		+0x004 ：Uchar  initialized;
++0x008 ：LVOID SsHandle;
++0x00c ：_LIST_ENTRY InloadOrderMoudleList;//载入顺序排序的dll
++0x014 ：_LIST_ENTRY InMemoryOrderMoudleList;//内存排序的DLL
++0x01c ：_LIST_ENTRY InitalizationOrderMoudleList;//初始化排序的 ntdll kernel32.dll或者kernerbase.dll  ..
+	}
+当dll文件加载后 ldr 会存放模块地址信息，通过 _LIST_ENTRY 双向链表可以遍历所有模块
+
+struct _LIST_ENTRY {
+		_LIST_ENTRY *Flink;//下一个结构体指针
+		_LIST_ENTRY *Blink;//上一个机构体指针
+	} 
+
+Mov esi,FS:[0x30]//PEB地址
+Mov esi,[esi+0xc]//Ldr地址
+Mov esi,[esi+0x1c]//InitalizationOrderMoudleList
+Mov esi,[esi]//第二个DLL文件信息
+
+mov esi,FS:[0x30]// peb
+Mov esi,[esi+c]//LDR
+Mov esi,[esi+0x1c]//_LIST_ENTRY
+Mov esi,[esi+0x8]//dllbase
+
+
+typedef struct _LDR_DATA_TABLE_ENTRY
+	{
+		LIST_ENTRY InLoadOrderMoudleList;
+		LIST_ENTRY InMemoryOrderMoudleList;
+		LIST_ENTRY InInitializationOrderMoudleList;
+		PVOID DllBase;  //模块基址 GetMdouleHanlde  找到导出表 kernel32.dll “LoadLibraryA” “GetProcAdrress”
+		PVOID EntryPoint;
+		PVOID SizeOfImage;
+		PVOID FullDllName;
+		.....
+	}
+
+获取导入表：
+	PE头 = ImageBase + 0x30
+	导出表 = PE 头 + x078
+	EAT = 导出表 + 0x1c	
+	ENT = 导出表 + 0x20
+	EOP = 导出表 + 0x24
+	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,52 @@
+
+
+ShellCode_MessageBox
+	MessageBoxA(51hook)
+1)实现hello51hook
+	步骤1：将ebp+4的值改成我们编写的代码所在地址
+	步骤2：编写shellcode
+	难点1：hello51hook字符串的添加。
+	难点2：MessageBoxA地址
+	难点3：获取当前EIP的值（GetPC）
+	注意：尽量不要让硬编码出出现0， 可以利用寄存器  
+	xor edi，edi
+	push edi
+
+实现：
+	__asm
+	    {
+		//5     1   h     o    o     k
+		//0X35 0X31 0X68 0X6F 0X6F 0X6B
+		//尽量不要让硬编码中出现0
+		push 0x6B6F;
+		push 0x6F683135;
+		mov eax, esp;
+		xor edi, edi;
+		push edi;
+		push edi;
+		push eax;
+		push edi;
+		mov eax,0X77261930;  //MessageBoxA
+		call eax;           // 不能直接call地址 
+		mov eax,0x76535990;  //ExitProcess  
+		push edi;
+		call eax;
+	  }
+
+自定义字符串比较函数：
+MystrCmp()
+{
+
+	_asm
+	{
+		Lea esi,  [0x字符串A]
+		Lea edi  [0x字符串B]
+		Mov ecx,  循环次数。
+		Repe Cmpsb
+		je Cmp_equal
+		Mov eax, 0
+		Cmp_equal:
+		Mov eax,1;
+	}
+}
+
