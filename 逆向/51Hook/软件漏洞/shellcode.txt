@@ -50,3 +50,64 @@ MystrCmp()
 	}
 }
 
+shellcode 汇编实现MessageBoxA 
+
+1. 保存相关字符串
+user32.dll、LoadLibraryA、 GetProcAddress、 MessagBoxA、 hello 51hook
+
+2. 通过fs寄存器获取kernel32.dll
+Mov esi,  fs:[0x30]     //PEB
+Mov esi,  [esi+0xc]    //LDR结构体地址
+Mov esi,  [esi+0x1c]  //list
+Mov esi,  [esi]           //list第二项
+Mov ecx, [esi,+0x8]  //kernel32.dll基址
+
+3.获取导入表  根据导出表查找需要的函数
+MyGetProcAddress（imagBase,  funName,  strlen)
+ImageBase + 0x3c = NT头
+NT头 + 0x78 = dataDirectory 第一项 导出表
+EAT  = 导出表 + 0x1c
+ENT  = 导出表 + 0x20
+EOT  = 导出表 + 0x24
+
+4. 字符串比较函数
+Repe  cmpsb 字符比较，edi 与esi地址的值按字节进行比较,ecx为0或者比较结果不相同时候停止DF循环。循环结束后将设置ZF标志位
+
+5、payload函数：（stradd）
+通过调用以上各个功能实现输出hello51hook
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
