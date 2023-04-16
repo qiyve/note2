@@ -1,0 +1,110 @@
+1、实现简单duilib窗口
+* 继承 WindowImplBase 类（DuiLib 窗口管理的一个基类）
+* 实现 GetWindowClassName 接口（描述窗口唯一名称的方法）
+* 实现 GetSkinFile 接口（描述窗口样式的 xml 文件名称方法）
+* 实现 GetSkinFolder 接口（描述窗口样式文件路径的方法）
+* 创建一个窗口描述配置文件（描述窗口的 xml 样式文件）
+
+
+ setText（）    	   //设置文本
+ SetBkColor（）      //设置背景色
+ init （）		    //初始化
+ AttachDialog（）    //附件对话框
+ AddNotifier（）      //添加通知
+
+
+2、资源压缩打包
+
+* 资源存放在文件夹中	
+	* 	 
+* 资源存放在ZIP压缩文件中      压缩打包可以减少程序的体积 可以实现加密    
+	*将主题文件 xxx.xml 压缩成zip    // 直接将其放在最外层
+	* CPaintManagerUI::SetResourcePath(CPaintManagerUI::GetInstancePath());
+	* CPaintManagerUI::SetResourceZip(_T("theme.zip"));   使用方式
+
+* 资源打包到EXE 中
+	* 将打包后的 ZIP 压缩包当vc程序开发时的资源，一同打包到发布的exe 文件中    也可防止篡改资源文件 
+	* 将上述的两行代码删除 重写基类的两个资源处理函数， 这两个函数分别是GetResourceType 和 GetResourceID   前者是设置资源类型，有以下几种
+	* UILIB_FILE=1,    		   // 来自磁盘文件
+	* UILIB_ZIP,         		   // 来自磁盘zip压缩包
+	* UILIB_RESOURCE,   	   // 来自资源
+	* UILIB_ZIPRESOURCE,   	   // 来自资源的zip压缩包
+
+	* DuiLib::UILIB_RESOURCETYPE   MainWndFrame::GetResourceType()  const	  {	return UILIB_ZIPRESOURCE; }    函数重写
+	* LPCTSTR  MainWndFrame::GetResourceID()   const    {	   return MAKEINTRESOURCE(IDR_ZIPRES1);  }
+
+* 使用DLL 文件存放资源
+
+3、XML 使用（布局）
+	* 让程序在Debug 版本下使用本地XML文件， Release 版本时使用打包到程序中的ZIP资源文件。 修改 GetSkinFolder 和 GetResourceType 两种方法
+	* DuiLib:: CDuiString   nWndFrame:: GetSkinFolder()  { #if _DEBUG  return _T("theme")； #else reurn m_PaintManager.GetInstancePath();  #endif }     
+	* DuiLib::UILIB_RESOURCETYPE MainWndFrame::GetResourceType() const {  #if _DEBUG   return UILIB_FILE;   #else   return  UILIB_ZIPRESOURCE;  #endif  }                  
+	*  方便实施更新查看操作
+
+	* Duilib 中重要的几个部分分别是如下：
+
+	1. HorizontalLayout (水平布局 ) 和 VerticalLayout  （垂直布局）
+		<?xml version="1.0" encoding="UTF-8"?>        		  	xml文件描述 
+		<Window size="640,480" caption="0,0,0,35">                  	size 窗口大小     captain  窗口标题栏的有效范围
+			<VerticalLayout>							window中的VerticalLayout是一个最外部布局 垂直布局  如需水平布局 使用 HorizontalLayout 
+				<HorizontalLayout bkcolor="#FFD81E06"/>		bkcolor 设置颜色
+				<HorizontalLayout bkcolor="#FF1AFA29"/>
+				<HorizontalLayout bkcolor="#FF1296DB"/>
+			</VerticalLayout>
+		</Window>
+
+	2. TabLayout
+		* TabLayout 实现了一个 Tab 标签页方式的布局系统，其下包含的内容只能显示一个  而想显示另外的两个布局，我们需要通过代码来控制。
+
+	3. TileLayout
+		* 是一个块级的布局，它下面的控件都会以块为单位，像麻将一样一排一排的组合
+		* TileLayout 有两个比较关键的属性，itemsize 和 columns，两者不能同时使用。前者决定 TileLayout 包含的子控件以多大尺寸来排列，后者决定了 TileLayout 有几列数据，
+		   itemsize 指定为 "50,50"， 就是告诉 TileLayout 让子控件以宽度和高度分别 50 的大小来进行排列
+		* 如果我们指定了 columns 为3 那么这行只有  3列数据
+
+	4. Container	
+	5. CHildLayout
+	6. 使用频率由上到下，下面我们分别介绍几种布局的特点。
+
+4、XML 实战
+	设置高度 
+		  height 
+	置内外边距 
+		 * trol 控件 padding 
+		 * nset
+	浮动
+		* 们还可以通过让控件 浮动起来 的方式，通过指定一个 pos 属性让它想在哪里就在哪里。但前提是你要通过 float 属性指定控件是一个浮动的控件
+		* 例： <Control bkimage="logo.png" height="18" width="18" float="true" pos="8,8,26,26" />  第三第四参数 决定控件右上角和右下角  ps: 间本身的大小  缺：不易维护
+		* 使用 childpadding 属性指定了右侧三个按钮水平布局的子控件左右间距（如果是垂直布局那么就是上下间距）
+		* 使用 normalimage 属性设置控件的默认图片样式
+		* 使用 hotimage 属性设置控件的鼠标悬浮状态图片
+		* 使用 pushedimage 属性设置鼠标按下状态图片
+		* 使用 visible 属性设置还原控件的默认显示状态（见还原按钮的最后一个属性）	
+				
+
+*  
+* 
+* 
+* 
+* 
+* 
+* 
+* 
+* 
+* 
+* 
+* 
+* 
+* 
+* 
+* 
+* 
+
+-----------------------------------------------------------------
+消息 
+
+WM_NCACTIVATE		当需要更改其非client(客户) 区域以指示活动或非活动状态时，发送到窗口。
+WM_NCCALCSIZE		在必须计算窗口工作区的大小和位置时发送。通过处理此消息，应用程序可以在窗口的大小或位置更改时控制窗口工作区的内容。
+WM_NCPAINT		当必须绘制窗口的框架时，WM_NCPAINT消息将发送到窗口。		
+
+
