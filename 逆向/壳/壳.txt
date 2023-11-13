@@ -5,5 +5,7 @@
 	4.添加区段、修改相关PE某些字段值
 	5.将壳代码写入新区段
 	6.保存文件
+脱壳
+	1.https://blog.csdn.net/qq_41866334/article/details/124610585
 
 	
