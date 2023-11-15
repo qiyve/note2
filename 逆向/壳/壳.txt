@@ -8,4 +8,7 @@
 脱壳
 	1.https://blog.csdn.net/qq_41866334/article/details/124610585
 
+
+寻找程序入口点
+	https://www.freebuf.com/articles/system/335316.html
 	
